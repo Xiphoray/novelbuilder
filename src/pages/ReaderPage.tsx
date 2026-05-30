@@ -30,6 +30,7 @@ export default function ReaderPage() {
   const [showBackTop, setShowBackTop] = useState(false);
   const [appendLoading, setAppendLoading] = useState(false);
   const [appendProgress, setAppendProgress] = useState('');
+  const [appendElapsed, setAppendElapsed] = useState(0);
   const [canAppend, setCanAppend] = useState(true);
 
   const contentRef = useRef<HTMLDivElement>(null);
@@ -153,6 +154,20 @@ export default function ReaderPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentBook, currentChapters, currentChapterIndex, setCurrentChapterIndex]);
+
+  // 追加生成计时器
+  useEffect(() => {
+    if (!appendLoading) return;
+    setAppendElapsed(0);
+    const timer = setInterval(() => setAppendElapsed((p) => p + 1), 1000);
+    return () => clearInterval(timer);
+  }, [appendLoading]);
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return mins > 0 ? `${mins}分${secs}秒` : `${secs}秒`;
+  };
 
   // F-006: 追加生成处理
   const handleAppendGeneration = useCallback(async () => {
@@ -517,6 +532,12 @@ export default function ReaderPage() {
                     <Spin indicator={<LoadingOutlined spin />} />
                     <div style={{ marginTop: 12, color: '#666' }}>
                       {appendProgress || 'AI 正在续写...'}
+                    </div>
+                    <div style={{ marginTop: 8, fontSize: 13, color: '#999' }}>
+                      已等待 <span style={{ color: '#1677ff', fontWeight: 600 }}>{formatTime(appendElapsed)}</span>
+                      {appendElapsed > 30 && (
+                        <span> · 预计还需要 30-120 秒</span>
+                      )}
                     </div>
                   </div>
                 ) : canAppend ? (
