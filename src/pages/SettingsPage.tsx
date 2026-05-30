@@ -455,17 +455,21 @@ export default function SettingsPage() {
                     <Text type="secondary" style={{ fontSize: 12 }}>
                       [{config.provider}] {config.modelId}
                     </Text>
-                    {modelInfoMap[config.id] && (
-                      <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
-                        {modelInfoMap[config.id].contextLength && (
-                          <span>上下文: {(modelInfoMap[config.id].contextLength! / 1024).toFixed(0)}K</span>
-                        )}
-                        {modelInfoMap[config.id].contextLength && modelInfoMap[config.id].maxTokens && <span> · </span>}
-                        {modelInfoMap[config.id].maxTokens && (
-                          <span>最大输出: {modelInfoMap[config.id].maxTokens!.toLocaleString()} tokens</span>
-                        )}
-                      </div>
-                    )}
+                    {(() => {
+                      const mi = modelInfoMap[config.id];
+                      if (!mi) return null;
+                      return (
+                        <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
+                          {mi.contextLength && (
+                            <span>上下文: {(mi.contextLength / 1024).toFixed(0)}K</span>
+                          )}
+                          {mi.contextLength && mi.maxTokens && <span> · </span>}
+                          {mi.maxTokens && (
+                            <span>最大输出: {mi.maxTokens.toLocaleString()} tokens</span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <Space>
                     {!config.isActive && (
