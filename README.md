@@ -179,6 +179,7 @@ novelbuilder/
 │   └── icons.svg
 ├── server/                      # Express 后端服务
 │   ├── index.js                 # 入口文件（中间件、路由注册）
+│   ├── .env.example             # 环境变量示例
 │   ├── config.json              # AI 配置存储
 │   ├── logs/                    # 运行日志
 │   ├── routes/                  # API 路由
@@ -280,10 +281,10 @@ novelbuilder/
 开发环境下，Vite 代理解决 CORS 跨域问题：
 
 ```
-浏览器 ──▶ /ai-api/* ──▶ Vite Proxy ──▶ https://api.example.com/*
+浏览器 ──▶ /api/* ──▶ Vite Proxy ──▶ http://localhost:5299/api/*
 ```
 
-生产环境下，请求直接转发到后端：
+生产环境下，构建后的静态文件由 Express 托管，请求直接由后端处理：
 
 ```
 浏览器 ──▶ /api/* ──▶ Express 后端 ──▶ AI Provider API
