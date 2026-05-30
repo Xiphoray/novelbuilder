@@ -166,6 +166,7 @@ npm run preview
 | [Ant Design](https://ant.design/) | 5.29 | UI 组件库 |
 | [Zustand](https://github.com/pmndrs/zustand) | 5 | 状态管理 |
 | [Dexie.js](https://dexie.org/) | 4.4 | IndexedDB 封装 |
+| [uuid](https://github.com/uuidjs/uuid) | 11 | 唯一 ID 生成 |
 | [React Router](https://reactrouter.com/) | 7 | 路由 |
 | [jschardet](https://github.com/aadsm/jschardet) | 3.1 | 编码检测 |
 | [Express](https://expressjs.com/) | 5 | 后端 API 服务 |
