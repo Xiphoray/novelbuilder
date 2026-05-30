@@ -26,7 +26,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { AIProviderConfig, AIProviderType, ThemeType, ReadingSettings } from '@/types';
 import { db } from '@/services/db';
-import { saveServerConfig, testConnection, getServerConfig } from '@/services/aiService';
+import { saveServerConfig, testConnection, getServerConfig, setActiveServerConfig, healthCheck } from '@/services/aiService';
 import { v4 as uuidv4 } from 'uuid';
 
 const { Title, Text } = Typography;
@@ -46,6 +46,28 @@ export default function SettingsPage() {
   const [readingForm] = Form.useForm();
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [backendOnline, setBackendOnline] = useState<boolean>(false);
+  const [modelInfoMap, setModelInfoMap] = useState<Record<string, { maxTokens?: number; contextLength?: number }>>({});
+
+  // 检测后端状态
+  useEffect(() => {
+    healthCheck().then((online) => setBackendOnline(online));
+  }, []);
+
+  // 加载后端配置中的模型信息
+  useEffect(() => {
+    getServerConfig().then((result) => {
+      if (result.providers) {
+        const infoMap: Record<string, { maxTokens?: number; contextLength?: number }> = {};
+        for (const p of result.providers) {
+          if (p.id && (p.maxTokens || p.contextLength)) {
+            infoMap[p.id] = { maxTokens: p.maxTokens, contextLength: p.contextLength };
+          }
+        }
+        setModelInfoMap(infoMap);
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     readingForm.setFieldsValue(readingSettings);
@@ -54,7 +76,7 @@ export default function SettingsPage() {
   // 同步配置到后端
   const syncConfigToServer = useCallback(async (config: AIProviderConfig) => {
     try {
-      await saveServerConfig({
+      const result = await saveServerConfig({
         id: config.id,
         name: config.name,
         provider: config.provider,
@@ -62,6 +84,15 @@ export default function SettingsPage() {
         apiKey: (config as unknown as { apiKey?: string }).apiKey || '',
         modelId: config.modelId,
       });
+      if (result.maxTokens || result.contextLength) {
+        setModelInfoMap((prev) => ({
+          ...prev,
+          [config.id]: {
+            maxTokens: result.maxTokens,
+            contextLength: result.contextLength,
+          },
+        }));
+      }
       console.log('[Settings] Config synced to server:', config.id);
     } catch (err) {
       console.warn('[Settings] Failed to sync config to server:', err);
@@ -99,11 +130,35 @@ export default function SettingsPage() {
 
   const handleDeleteAIConfig = async (id: string) => {
     await deleteAIConfig(id);
+    setModelInfoMap((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     if (editingId === id) {
       setEditingId(null);
       form.resetFields();
     }
     message.success('AI 配置已删除');
+  };
+
+  // 设为活跃配置
+  const handleSetActive = async (config: AIProviderConfig) => {
+    try {
+      await setActiveServerConfig(config.id);
+      // 同时更新本地 store
+      const { aiConfigs: configs } = useSettingsStore.getState();
+      for (const c of configs) {
+        if (c.id === config.id) {
+          await updateAIConfig({ ...c, isActive: true });
+        } else if (c.isActive) {
+          await updateAIConfig({ ...c, isActive: false });
+        }
+      }
+      message.success(`已切换到「${config.name}」`);
+    } catch {
+      message.error('设置活跃配置失败，请检查后端服务');
+    }
   };
 
   const handleSaveReadingSettings = async () => {
@@ -317,6 +372,11 @@ export default function SettingsPage() {
           <Space>
             <ApiOutlined />
             AI Provider 配置
+            {backendOnline ? (
+              <Tag color="green">后端在线</Tag>
+            ) : (
+              <Tag color="red">后端离线</Tag>
+            )}
           </Space>
         }
         style={{ marginBottom: 24 }}
@@ -390,11 +450,29 @@ export default function SettingsPage() {
                 >
                   <div>
                     <Text strong>{config.name}</Text>
-                    <Text type="secondary" style={{ marginLeft: 8 }}>
+                    {config.isActive && <Tag color="green" style={{ marginLeft: 4 }}>活跃</Tag>}
+                    <br />
+                    <Text type="secondary" style={{ fontSize: 12 }}>
                       [{config.provider}] {config.modelId}
                     </Text>
+                    {modelInfoMap[config.id] && (
+                      <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
+                        {modelInfoMap[config.id].contextLength && (
+                          <span>上下文: {(modelInfoMap[config.id].contextLength! / 1024).toFixed(0)}K</span>
+                        )}
+                        {modelInfoMap[config.id].contextLength && modelInfoMap[config.id].maxTokens && <span> · </span>}
+                        {modelInfoMap[config.id].maxTokens && (
+                          <span>最大输出: {modelInfoMap[config.id].maxTokens!.toLocaleString()} tokens</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <Space>
+                    {!config.isActive && (
+                      <Button size="small" type="primary" onClick={() => handleSetActive(config)}>
+                        设为活跃
+                      </Button>
+                    )}
                     <Button size="small" onClick={() => handleEditAIConfig(config)}>
                       编辑
                     </Button>

@@ -180,15 +180,54 @@ export async function saveServerConfig(config: {
   modelId: string;
   name?: string;
   id?: string;
-}): Promise<{ id: string; provider: string; baseUrl: string; modelId: string }> {
+}): Promise<{
+  id: string;
+  provider: string;
+  baseUrl: string;
+  modelId: string;
+  maxTokens?: number;
+  contextLength?: number;
+}> {
   return apiPost('/config', config);
 }
 
 /**
  * 获取后端配置
  */
-export async function getServerConfig() {
+export async function getServerConfig(): Promise<{
+  isConfigured: boolean;
+  activeProviderId: string | null;
+  providers: {
+    id: string;
+    name: string;
+    provider: string;
+    baseUrl: string;
+    modelId: string;
+    isActive: boolean;
+    maxTokens?: number;
+    contextLength?: number;
+  }[];
+}> {
   return apiGet('/config');
+}
+
+/**
+ * 设置活跃配置
+ */
+export async function setActiveServerConfig(providerId: string): Promise<void> {
+  await apiPost('/config/activate', { providerId });
+}
+
+/**
+ * 后端健康检查
+ */
+export async function healthCheck(): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE}/../health`, { signal: AbortSignal.timeout(3000) });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 // ============ SSE 流式生成 ============
