@@ -32,3 +32,4 @@ server/test-*.js
 *.njsproj
 *.sln
 *.sw?
+tsc_errors.txt
