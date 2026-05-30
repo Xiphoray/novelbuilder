@@ -1,0 +1,264 @@
+<div align="center">
+
+# ✨ Novel Builder
+
+**AI 驱动的即时小说生成与阅读器**
+
+*边读边写，让 AI 成为你的创作搭档*
+
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite)](https://vitejs.dev/)
+[![Ant Design](https://img.shields.io/badge/Ant%20Design-5-0170FE?logo=antd)](https://ant.design/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+[功能特性](#-功能特性) · [快速开始](#-快速开始) · [技术栈](#-技术栈) · [项目结构](#-项目结构) · [开发指南](#-开发指南)
+
+---
+
+</div>
+
+## 📖 项目简介
+
+Novel Builder 是一款 Web 端 AI 小说即时生成阅读器。它支持：
+
+- 🤖 **AI 即时创作**：选择风格，一键生成 5 章小说，边读边追加
+- 📚 **本地书库管理**：导入 TXT 文件，自动识别编码与章节
+- 🎨 **沉浸式阅读**：多种主题、字体、排版参数可调
+- 🔌 **多 Provider 支持**：OpenAI / Anthropic / 兼容 API 无缝切换
+
+## 🚀 功能特性
+
+### 阅读体验
+
+| 功能 | 说明 |
+|------|------|
+| 📖 沉浸式阅读 | 单列长滚动模式，支持键盘/鼠标翻页 |
+| 📑 章节目录 | Drawer 抽屉式目录面板，一键跳转 |
+| ⬆️ 回到顶部 | 浮动按钮，滚动超过 200px 自动出现 |
+| 📊 阅读进度 | 自动记录并恢复阅读位置 |
+| ⬇️ 书籍导出 | TXT 格式一键下载 |
+
+### 书库管理
+
+| 功能 | 说明 |
+|------|------|
+| 📁 侧边栏书库 | 按最后阅读时间排序，显示进度百分比 |
+| 🔍 书名搜索 | 实时模糊匹配，快速定位 |
+| 📥 文件导入 | 拖拽或选择导入 TXT，自动识别编码 |
+| 📝 章节分割 | 自动识别中文章节标题（第X章/节/回） |
+| 🖱️ 右键菜单 | 打开、重命名、下载、删除 |
+
+### 排版设置
+
+| 功能 | 说明 |
+|------|------|
+| 🔤 字号调整 | 14px ~ 32px 滑块调节 |
+| 📏 行距调整 | 1.2 ~ 2.5 精细控制 |
+| 🎯 字体选择 | 系统默认、宋体、楷体、等宽 |
+| 🌓 主题切换 | 亮色 / 暗色 / 护眼 三种主题 |
+| 📐 内容宽度 | 600px ~ 1200px 自适应 |
+| ⚡ 快速预设 | 默认/舒适/夜间/紧凑 四种方案一键切换 |
+
+### AI 生成
+
+| 功能 | 说明 |
+|------|------|
+| 🎭 风格选择 | 玄幻、仙侠、都市、科幻等 11 种风格 |
+| 📝 AI 生成 | 首次生成 5 章小说内容 |
+| 🔄 追加生成 | 阅读到最后章节时自动续写 |
+| 🔌 多 Provider | OpenAI / Anthropic / OpenAI Compatible |
+
+### 存储管理
+
+| 功能 | 说明 |
+|------|------|
+| 💾 IndexedDB | 大容量本地存储，支持 50MB+ 小说 |
+| 📊 存储监控 | 实时显示已用/可用空间 |
+| 🧹 数据清理 | 一键清理残留章节和历史数据 |
+
+## 🛠️ 快速开始
+
+### 环境要求
+
+- **Node.js** >= 18
+- **npm** >= 9
+
+### 安装与运行
+
+```bash
+# 克隆项目
+git clone https://github.com/Xiphoray/novelbuilder.git
+cd ai-novel-builder
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+
+# 构建生产版本
+npm run build
+
+# 预览生产构建
+npm run preview
+```
+
+启动后访问 [http://localhost:5298](http://localhost:5298) 🎉
+
+### 配置 AI Provider
+
+1. 打开设置页面 `#/settings`
+2. 选择 Provider 类型（OpenAI / Anthropic / OpenAI Compatible）
+3. 填写 API Base URL、API Key、模型 ID
+4. 点击「测试连接」验证配置
+5. 点击「添加配置」保存
+
+**内置 AI 服务（示例）：**
+
+| Provider | Base URL | 模型 |
+|----------|----------|------|
+| Example | `https://api.example.com/v1` | mimo-v2.5 |
+| OpenAI | `https://api.openai.com/v1` | gpt-4o |
+
+## 🏗️ 技术栈
+
+| 技术 | 版本 | 用途 |
+|------|------|------|
+| [React](https://react.dev/) | 19 | UI 框架 |
+| [TypeScript](https://www.typescriptlang.org/) | 6 | 类型安全 |
+| [Vite](https://vitejs.dev/) | 8 | 构建工具 |
+| [Ant Design](https://ant.design/) | 5.29 | UI 组件库 |
+| [Zustand](https://github.com/pmndrs/zustand) | 5 | 状态管理 |
+| [Dexie.js](https://dexie.org/) | 4.4 | IndexedDB 封装 |
+| [React Router](https://reactrouter.com/) | 7 | 路由 |
+| [jschardet](https://github.com/aadsm/jschardet) | 3.1 | 编码检测 |
+
+## 📁 项目结构
+
+```
+novelbuilder/
+├── public/                      # 静态资源
+│   ├── favicon.svg
+│   └── icons.svg
+├── src/
+│   ├── assets/                  # 图片资源
+│   ├── components/
+│   │   ├── CreateAIDialog/      # AI 书籍创建对话框
+│   │   └── Sidebar/             # 侧边栏书库组件
+│   ├── layouts/
+│   │   └── RootLayout.tsx       # 根布局（侧边栏 + 阅读区）
+│   ├── pages/
+│   │   ├── ReaderPage.tsx       # 📖 阅读器主页面
+│   │   └── SettingsPage.tsx     # ⚙️ 设置页面
+│   ├── routes/
+│   │   └── index.tsx            # 路由配置
+│   ├── services/
+│   │   ├── db.ts                # IndexedDB 数据库（Dexie.js）
+│   │   ├── exportService.ts     # 书籍导出服务
+│   │   └── importService.ts     # 文件导入与编码检测
+│   ├── stores/
+│   │   ├── bookStore.ts         # 书籍状态管理
+│   │   └── settingsStore.ts     # 设置状态管理
+│   ├── styles/
+│   │   └── global.css           # 全局样式 + 主题
+│   ├── types/
+│   │   └── index.ts             # TypeScript 类型定义
+│   ├── App.tsx                  # 应用入口
+│   ├── main.tsx                 # Vite 入口
+│   └── vite-env.d.ts            # Vite 类型声明
+├── index.html
+├── package.json
+├── tsconfig.json
+├── vite.config.ts               # Vite 配置（含 AI API 代理）
+└── requirement.md               # 产品需求文档
+```
+
+## 🧩 核心模块
+
+### 数据流
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   ReaderPage │────▶│   bookStore  │────▶│  IndexedDB   │
+│   (阅读器)   │     │  (Zustand)   │     │  (Dexie.js)  │
+└──────────────┘     └──────────────┘     └──────────────┘
+                            │
+                            ▼
+                     ┌──────────────┐     ┌──────────────┐
+                     │ SettingsPage │────▶│ settingsStore│
+                     │   (设置页)   │     │ (LocalStorage)│
+                     └──────────────┘     └──────────────┘
+```
+
+### AI 代理架构
+
+开发环境下，Vite 代理解决 CORS 跨域问题：
+
+```
+浏览器 ──▶ /ai-api/* ──▶ Vite Proxy ──▶ https://api.example.com/*
+```
+
+## 📋 开发指南
+
+### 可用脚本
+
+| 命令 | 说明 |
+|------|------|
+| `npm run dev` | 启动开发服务器 |
+| `npm run build` | 构建生产版本 |
+| `npm run preview` | 预览生产构建 |
+| `npm run lint` | ESLint 代码检查 |
+
+### 开发规范
+
+- **组件**：React 函数组件 + Hooks
+- **状态**：Zustand store，避免 prop drilling
+- **样式**：Ant Design 组件 + 全局 CSS 变量主题
+- **类型**：严格 TypeScript，所有接口在 `types/index.ts` 定义
+- **路由**：React Router v7，hash 模式
+
+### 主题系统
+
+通过 CSS 变量实现三种主题切换：
+
+| 主题 | 背景色 | 文字色 | 适用场景 |
+|------|--------|--------|----------|
+| `light` | `#FFFFFF` | `#333333` | 日间阅读 |
+| `dark` | `#1F1F1F` | `#E0E0E0` | 夜间阅读 |
+| `eye-care` | `#F7F0E6` | `#5B4636` | 护眼模式 |
+
+## 📊 功能完成度
+
+| 模块 | 完成度 | 状态 |
+|------|--------|------|
+| 阅读器核心 | 100% | ✅ |
+| 侧边栏书库 | 100% | ✅ |
+| 排版设置 | 100% | ✅ |
+| 本地导入 | 100% | ✅ |
+| 数据持久化 | 100% | ✅ |
+| 书籍导出 | 100% | ✅ |
+| AI API 配置 | 100% | ✅ |
+| AI 书籍生成 | 0% | 🔜 开发中 |
+| 追加生成 | 0% | 🔜 开发中 |
+| **整体进度** | **81%** | 🚧 |
+
+## 🤝 参与贡献
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建 Pull Request
+
+## 📄 License
+
+[MIT](LICENSE)
+
+---
+
+<div align="center">
+
+**⭐ 如果这个项目对你有帮助，请给个 Star 支持一下！⭐**
+
+</div>

@@ -1,0 +1,309 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", sans-serif;
+}
+
+#root {
+  height: 100vh;
+  width: 100%;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Ant Design overrides for reader */
+.ant-list-item {
+  border-bottom: none !important;
+}
+
+/* ==================== Theme: Dark ==================== */
+.theme-dark {
+  background-color: #1a1a1a !important;
+  color: #d4d4d4 !important;
+}
+
+.theme-dark .ant-typography,
+.theme-dark h3,
+.theme-dark h4 {
+  color: #d4d4d4 !important;
+}
+
+.theme-dark .ant-typography.ant-typography-secondary {
+  color: #888 !important;
+}
+
+.theme-dark .ant-btn-default {
+  background-color: #2a2a2a !important;
+  border-color: #444 !important;
+  color: #d4d4d4 !important;
+}
+
+.theme-dark .ant-btn-default:hover {
+  border-color: #666 !important;
+  color: #fff !important;
+}
+
+.theme-dark .ant-btn-default:disabled {
+  background-color: #222 !important;
+  border-color: #333 !important;
+  color: #555 !important;
+}
+
+.theme-dark .ant-btn-primary {
+  background-color: #177ddc !important;
+  border-color: #177ddc !important;
+}
+
+.theme-dark .ant-progress-text {
+  color: #888 !important;
+}
+
+.theme-dark .ant-progress-bg {
+  background-color: #177ddc !important;
+}
+
+.theme-dark .ant-progress-trail-bg {
+  background-color: #333 !important;
+}
+
+.theme-dark .ant-empty-description {
+  color: #666 !important;
+}
+
+.theme-dark .ant-progress-text {
+  color: #888 !important;
+}
+
+.theme-dark hr {
+  border-color: #333 !important;
+}
+
+.theme-dark::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+.theme-dark::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* ==================== Sidebar Theme Variables ==================== */
+.sidebar-theme-dark {
+  --sidebar-bg: #1a1a1a;
+  --sidebar-border: #333;
+  --sidebar-active-bg: #177ddc22;
+}
+
+.sidebar-theme-dark .ant-typography h4,
+.sidebar-theme-dark .ant-typography.ant-typography-secondary {
+  color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-list-item {
+  color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-list-item:hover {
+  background: #2a2a2a !important;
+}
+
+.sidebar-theme-dark .ant-input,
+.sidebar-theme-dark .ant-input-affix-wrapper {
+  background: #2a2a2a !important;
+  border-color: #444 !important;
+  color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-input::placeholder,
+.sidebar-theme-dark .ant-input-affix-wrapper .ant-input::placeholder {
+  color: #666 !important;
+}
+
+.sidebar-theme-dark .anticon-search {
+  color: #666 !important;
+}
+
+.sidebar-theme-dark .ant-list-empty-text {
+  color: #666 !important;
+}
+
+.sidebar-theme-dark .ant-btn-default {
+  background-color: #2a2a2a !important;
+  border-color: #444 !important;
+  color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-btn-default:hover {
+  border-color: #666 !important;
+  color: #fff !important;
+}
+
+.sidebar-theme-dark .ant-btn-primary {
+  background-color: #177ddc !important;
+  border-color: #177ddc !important;
+}
+
+.sidebar-theme-dark .ant-select-selector {
+  background: #2a2a2a !important;
+  border-color: #444 !important;
+}
+
+.sidebar-theme-dark .ant-select-selection-item {
+  color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-popover-inner {
+  background: #2a2a2a !important;
+}
+
+.sidebar-theme-dark .ant-popover-inner-content {
+  color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-select-dropdown {
+  background: #2a2a2a !important;
+}
+
+.sidebar-theme-dark .ant-select-item {
+  color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-select-item-option-active,
+.sidebar-theme-dark .ant-select-item-option-selected {
+  background: #177ddc22 !important;
+  color: #d4d4d4 !important;
+}
+
+/* Sidebar Eye-Care Theme */
+.sidebar-theme-eye-care {
+  --sidebar-bg: #e8f5e9;
+  --sidebar-border: #c8e6c9;
+  --sidebar-active-bg: #c7edcc;
+}
+
+.sidebar-theme-eye-care .ant-list-item:hover {
+  background: #d5ecd8 !important;
+}
+
+.sidebar-theme-eye-care .ant-btn-default {
+  background-color: #b8e0bd !important;
+  border-color: #9ccda2 !important;
+  color: #3a3a3a !important;
+}
+
+.sidebar-theme-eye-care .ant-btn-default:hover {
+  border-color: #7ab883 !important;
+}
+
+.sidebar-theme-eye-care .ant-btn-primary {
+  background-color: #52c41a !important;
+  border-color: #52c41a !important;
+}
+
+/* ==================== Theme: Eye-Care ==================== */
+.theme-eye-care {
+  background-color: #c7edcc !important;
+  color: #3a3a3a !important;
+}
+
+.theme-eye-care .ant-typography,
+.theme-eye-care h3,
+.theme-eye-care h4 {
+  color: #3a3a3a !important;
+}
+
+.theme-eye-care .ant-typography.ant-typography-secondary {
+  color: #6b7b6e !important;
+}
+
+.theme-eye-care .ant-btn-default {
+  background-color: #b8e0bd !important;
+  border-color: #9ccda2 !important;
+  color: #3a3a3a !important;
+}
+
+.theme-eye-care .ant-btn-default:hover {
+  border-color: #7ab883 !important;
+}
+
+.theme-eye-care .ant-btn-default:disabled {
+  background-color: #d5ead8 !important;
+  border-color: #c0ddc4 !important;
+  color: #999 !important;
+}
+
+.theme-eye-care .ant-btn-primary {
+  background-color: #52c41a !important;
+  border-color: #52c41a !important;
+}
+
+.theme-eye-care .ant-progress-text {
+  color: #6b7b6e !important;
+}
+
+.theme-eye-care .ant-progress-bg {
+  background-color: #52c41a !important;
+}
+
+.theme-eye-care .ant-progress-trail-bg {
+  background-color: #b8e0bd !important;
+}
+
+.theme-eye-care .ant-empty-description {
+  color: #7ab883 !important;
+}
+
+.theme-eye-care::-webkit-scrollbar-thumb {
+  background: #9ccda2;
+}
+
+.theme-eye-care::-webkit-scrollbar-thumb:hover {
+  background: #7ab883;
+}
+
+/* ==================== Drag overlay ==================== */
+.drag-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(24, 144, 255, 0.12);
+  border: 3px dashed #1890ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.drag-overlay::after {
+  content: '松开以导入 TXT 文件';
+  font-size: 24px;
+  color: #1890ff;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 16px 32px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
