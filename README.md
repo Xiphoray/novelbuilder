@@ -180,7 +180,6 @@ novelbuilder/
 │   └── icons.svg
 ├── server/                      # Express 后端服务
 │   ├── index.js                 # 入口文件（中间件、路由注册）
-│   ├── .env.example             # 环境变量示例
 │   ├── config.json              # AI 配置存储
 │   ├── logs/                    # 运行日志
 │   ├── routes/                  # API 路由
