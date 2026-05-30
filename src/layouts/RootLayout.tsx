@@ -1,5 +1,6 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
+import CreateAIDialog from '@/components/CreateAIDialog';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useBookStore } from '@/stores/bookStore';
 import { ConfigProvider, Modal, Select, message, theme } from 'antd';
@@ -22,7 +23,9 @@ const ENCODING_OPTIONS = [
 ];
 
 export default function RootLayout() {
-  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const navigate = useNavigate();
+  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [createAIOpen, setCreateAIOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [encodingModalOpen, setEncodingModalOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -145,7 +148,14 @@ export default function RootLayout() {
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        <Sidebar visible={sidebarVisible} onToggle={() => setSidebarVisible(!sidebarVisible)} theme={currentTheme} />
+        <Sidebar
+          visible={sidebarVisible}
+          onToggle={() => setSidebarVisible(!sidebarVisible)}
+          theme={currentTheme}
+          onCreateAI={() => setCreateAIOpen(true)}
+          onOpenSettings={() => navigate('/settings')}
+        />
+        <CreateAIDialog open={createAIOpen} onClose={() => setCreateAIOpen(false)} />
         <main style={{ flex: '1 1 0%', overflow: 'auto', minHeight: 0 }}>
           <Outlet />
         </main>

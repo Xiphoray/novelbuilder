@@ -87,7 +87,17 @@ export const useBookStore = create<BookStore>((set, get) => ({
   addBook: async (book: Book, chapters: Chapter[]) => {
     try {
       await db.transaction('rw', [db.books, db.chapters], async () => {
-        await db.books.add(book);
+        // 获取所有书籍检查是否已存在同名书籍（title 字段未索引，使用 toArray）
+        const allBooks = await db.books.toArray();
+        const existing = allBooks.find(b => b.title === book.title);
+        if (existing) {
+          // 如果存在同名书籍，使用 put 而不是 add（会覆盖或更新）
+          await db.books.put(book);
+          // 删除旧章节
+          await db.chapters.where('bookId').equals(existing.id).delete();
+        } else {
+          await db.books.add(book);
+        }
         await db.chapters.bulkAdd(chapters);
       });
       // 重新加载列表
@@ -100,11 +110,11 @@ export const useBookStore = create<BookStore>((set, get) => ({
 
   deleteBook: async (bookId: string) => {
     try {
-      await db.transaction('rw', [db.books, db.chapters, db.generationHistory], async () => {
-        await db.books.delete(bookId);
-        await db.chapters.where('bookId').equals(bookId).delete();
-        await db.generationHistory.where('bookId').equals(bookId).delete();
-      });
+      // 先删除关联数据，再删除书籍
+      await db.chapters.where('bookId').equals(bookId).delete();
+      await db.generationHistory.where('bookId').equals(bookId).delete();
+      await db.books.delete(bookId);
+
       const { currentBook } = get();
       if (currentBook?.id === bookId) {
         set({ currentBook: null, currentChapters: [], currentChapterIndex: 0 });

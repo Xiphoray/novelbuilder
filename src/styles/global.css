@@ -94,10 +94,6 @@ html, body {
   color: #666 !important;
 }
 
-.theme-dark .ant-progress-text {
-  color: #888 !important;
-}
-
 .theme-dark hr {
   border-color: #333 !important;
 }
@@ -115,11 +111,35 @@ html, body {
   --sidebar-bg: #1a1a1a;
   --sidebar-border: #333;
   --sidebar-active-bg: #177ddc22;
+  --sidebar-header-bg: #1a1a1a !important;
+  --sidebar-search-bg: #1a1a1a !important;
+  --sidebar-hover-bg: #2a2a2a;
 }
 
-.sidebar-theme-dark .ant-typography h4,
-.sidebar-theme-dark .ant-typography.ant-typography-secondary {
+/* Dark Theme - Header */
+.sidebar-theme-dark .sidebar-header {
+  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%) !important;
+}
+
+/* Dark Theme - Search area */
+.sidebar-theme-dark div[style*="borderBottom"] {
+  background: #1a1a1a !important;
+  border-bottom-color: #333 !important;
+}
+
+/* Dark Theme - Typography */
+.sidebar-theme-dark .ant-typography,
+.sidebar-theme-dark h1,
+.sidebar-theme-dark h2,
+.sidebar-theme-dark h3,
+.sidebar-theme-dark h4,
+.sidebar-theme-dark h5,
+.sidebar-theme-dark h6 {
   color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-typography-secondary {
+  color: #888 !important;
 }
 
 .sidebar-theme-dark .ant-list-item {
@@ -130,6 +150,7 @@ html, body {
   background: #2a2a2a !important;
 }
 
+/* Dark Theme - Input */
 .sidebar-theme-dark .ant-input,
 .sidebar-theme-dark .ant-input-affix-wrapper {
   background: #2a2a2a !important;
@@ -150,6 +171,7 @@ html, body {
   color: #666 !important;
 }
 
+/* Dark Theme - Buttons */
 .sidebar-theme-dark .ant-btn-default {
   background-color: #2a2a2a !important;
   border-color: #444 !important;
@@ -166,6 +188,7 @@ html, body {
   border-color: #177ddc !important;
 }
 
+/* Dark Theme - Select */
 .sidebar-theme-dark .ant-select-selector {
   background: #2a2a2a !important;
   border-color: #444 !important;
@@ -173,6 +196,10 @@ html, body {
 
 .sidebar-theme-dark .ant-select-selection-item {
   color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-select-arrow {
+  color: #888 !important;
 }
 
 .sidebar-theme-dark .ant-popover-inner {
@@ -197,11 +224,98 @@ html, body {
   color: #d4d4d4 !important;
 }
 
+/* Dark Theme - Progress */
+.sidebar-theme-dark .ant-progress-text {
+  color: #888 !important;
+}
+
+.sidebar-theme-dark .ant-progress-trail-bg {
+  background-color: #333 !important;
+}
+
+/* Dark Theme - Tag */
+.sidebar-theme-dark .ant-tag {
+  color: #d4d4d4 !important;
+}
+
+/* Dark Theme - Modal */
+.sidebar-theme-dark .ant-modal-content {
+  background: #2a2a2a !important;
+}
+
+.sidebar-theme-dark .ant-modal-header {
+  background: #2a2a2a !important;
+}
+
+.sidebar-theme-dark .ant-modal-title {
+  color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-modal-footer {
+  border-top-color: #444 !important;
+}
+
+/* Dark Theme - Form */
+.sidebar-theme-dark .ant-form-item-label > label {
+  color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-modal .ant-btn-default {
+  background-color: #2a2a2a !important;
+  border-color: #444 !important;
+  color: #d4d4d4 !important;
+}
+
+/* Dark Theme - Dropdown */
+.sidebar-theme-dark .ant-dropdown-menu {
+  background: #2a2a2a !important;
+}
+
+.sidebar-theme-dark .ant-dropdown-menu-item {
+  color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-dropdown-menu-item:hover {
+  background: #177ddc22 !important;
+}
+
+.sidebar-theme-dark .ant-dropdown-menu-item-danger {
+  color: #ff4d4f !important;
+}
+
+.sidebar-theme-dark .ant-dropdown-menu-item-danger:hover {
+  background: #ff4d4f1a !important;
+}
+
+.sidebar-theme-dark .ant-dropdown-menu-item .anticon {
+  color: #888 !important;
+}
+
+.sidebar-theme-dark .ant-dropdown-menu-item .anticon-delete {
+  color: #ff4d4f !important;
+}
+
+/* Dark Theme - Confirm Modal */
+.sidebar-theme-dark .ant-modal-confirm-body .ant-modal-confirm-title {
+  color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .ant-modal-confirm-body .ant-modal-confirm-content {
+  color: #888 !important;
+}
+
 /* Sidebar Eye-Care Theme */
 .sidebar-theme-eye-care {
   --sidebar-bg: #e8f5e9;
   --sidebar-border: #c8e6c9;
   --sidebar-active-bg: #c7edcc;
+  --sidebar-header-bg: #4caf50 !important;
+  --sidebar-search-bg: #e8f5e9 !important;
+  --sidebar-hover-bg: #d5ecd8;
+}
+
+.sidebar-theme-eye-care .sidebar-header {
+  background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%) !important;
 }
 
 .sidebar-theme-eye-care .ant-list-item:hover {
@@ -221,6 +335,26 @@ html, body {
 .sidebar-theme-eye-care .ant-btn-primary {
   background-color: #52c41a !important;
   border-color: #52c41a !important;
+}
+
+.sidebar-theme-eye-care .ant-select-selector {
+  background: #d5ecd8 !important;
+  border-color: #9ccda2 !important;
+}
+
+.sidebar-theme-eye-care .ant-input,
+.sidebar-theme-eye-care .ant-input-affix-wrapper {
+  background: #d5ecd8 !important;
+  border-color: #9ccda2 !important;
+}
+
+.sidebar-theme-eye-care .ant-input::placeholder,
+.sidebar-theme-eye-care .ant-input-affix-wrapper .ant-input::placeholder {
+  color: #6b7b6e !important;
+}
+
+.sidebar-theme-eye-care .anticon-search {
+  color: #6b7b6e !important;
 }
 
 /* ==================== Theme: Eye-Care ==================== */
@@ -282,6 +416,38 @@ html, body {
 
 .theme-eye-care::-webkit-scrollbar-thumb:hover {
   background: #7ab883;
+}
+
+/* ==================== Sidebar Toggle Button ==================== */
+.sidebar-toggle-btn {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  color: #333;
+}
+
+.sidebar-toggle-btn:hover {
+  background: #f5f5f5;
+  border-color: #1677ff;
+  color: #1677ff;
+}
+
+.sidebar-theme-dark .sidebar-toggle-btn,
+.sidebar-toggle-btn.dark-theme {
+  background: #1a1a1a !important;
+  border-color: #444 !important;
+  color: #d4d4d4 !important;
+}
+
+.sidebar-theme-dark .sidebar-toggle-btn:hover,
+.sidebar-toggle-btn.dark-theme:hover {
+  background: #2a2a2a !important;
+  border-color: #177ddc !important;
+  color: #fff !important;
 }
 
 /* ==================== Drag overlay ==================== */

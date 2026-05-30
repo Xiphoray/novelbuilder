@@ -22,7 +22,7 @@
 
 Novel Builder 是一款 Web 端 AI 小说即时生成阅读器。它支持：
 
-- 🤖 **AI 即时创作**：选择风格，一键生成 5 章小说，边读边追加
+- 🤖 **AI 即时创作**：选择风格，一键生成 2 章小说，边读边追加
 - 📚 **本地书库管理**：导入 TXT 文件，自动识别编码与章节
 - 🎨 **沉浸式阅读**：多种主题、字体、排版参数可调
 - 🔌 **多 Provider 支持**：OpenAI / Anthropic / 兼容 API 无缝切换
@@ -65,8 +65,8 @@ Novel Builder 是一款 Web 端 AI 小说即时生成阅读器。它支持：
 | 功能 | 说明 |
 |------|------|
 | 🎭 风格选择 | 玄幻、仙侠、都市、科幻等 11 种风格 |
-| 📝 AI 生成 | 首次生成 5 章小说内容 |
-| 🔄 追加生成 | 阅读到最后章节时自动续写 |
+| 📝 AI 生成 | 首次生成 2 章小说内容 |
+| 🔄 追加生成 | 阅读到最后章节时手动续写 2 章 |
 | 🔌 多 Provider | OpenAI / Anthropic / OpenAI Compatible |
 
 ### 存储管理
@@ -84,19 +84,54 @@ Novel Builder 是一款 Web 端 AI 小说即时生成阅读器。它支持：
 - **Node.js** >= 18
 - **npm** >= 9
 
-### 安装与运行
+### 方式一：一键启动（推荐）
+
+项目提供了启动脚本，可同时启动前后端服务：
+
+**Windows 用户：**
+```bash
+# 双击运行
+start.bat
+
+# 或在命令行中运行
+.\start.bat
+```
+
+**macOS / Linux 用户：**
+```bash
+# 添加执行权限（首次运行）
+chmod +x start.sh
+
+# 运行脚本
+./start.sh
+```
+
+脚本会自动完成：
+1. 检查 Node.js 环境
+2. 安装缺失的依赖
+3. 启动后端服务（端口 5299）
+4. 启动前端开发服务器（端口 5298）
+
+### 方式二：手动启动
 
 ```bash
 # 克隆项目
 git clone https://github.com/Xiphoray/novelbuilder.git
-cd ai-novel-builder
+cd novelbuilder
 
 # 安装依赖
 npm install
 
-# 启动开发服务器
-npm run dev
+# 启动后端服务（新终端窗口）
+npm run server
 
+# 启动前端开发服务器（另一个终端窗口）
+npm run dev
+```
+
+### 构建与预览
+
+```bash
 # 构建生产版本
 npm run build
 
@@ -133,6 +168,7 @@ npm run preview
 | [Dexie.js](https://dexie.org/) | 4.4 | IndexedDB 封装 |
 | [React Router](https://reactrouter.com/) | 7 | 路由 |
 | [jschardet](https://github.com/aadsm/jschardet) | 3.1 | 编码检测 |
+| [Express](https://expressjs.com/) | 5 | 后端 API 服务 |
 
 ## 📁 项目结构
 
@@ -141,6 +177,10 @@ novelbuilder/
 ├── public/                      # 静态资源
 │   ├── favicon.svg
 │   └── icons.svg
+├── server/
+│   ├── index.js                 # Express 后端 API 服务
+│   ├── config.json              # AI 配置存储
+│   └── logs/                    # 运行日志
 ├── src/
 │   ├── assets/                  # 图片资源
 │   ├── components/
@@ -167,6 +207,8 @@ novelbuilder/
 │   ├── App.tsx                  # 应用入口
 │   ├── main.tsx                 # Vite 入口
 │   └── vite-env.d.ts            # Vite 类型声明
+├── start.bat                    # Windows 一键启动脚本
+├── start.sh                     # macOS/Linux 一键启动脚本
 ├── index.html
 ├── package.json
 ├── tsconfig.json
@@ -189,6 +231,12 @@ novelbuilder/
                      │ SettingsPage │────▶│ settingsStore│
                      │   (设置页)   │     │ (LocalStorage)│
                      └──────────────┘     └──────────────┘
+                            │
+                            ▼
+                     ┌──────────────┐     ┌──────────────┐
+                     │ Express 后端 │────▶│  AI Provider │
+                     │  (API 代理)  │     │ (OpenAI等)   │
+                     └──────────────┘     └──────────────┘
 ```
 
 ### AI 代理架构
@@ -199,16 +247,24 @@ novelbuilder/
 浏览器 ──▶ /ai-api/* ──▶ Vite Proxy ──▶ https://api.example.com/*
 ```
 
+生产环境下，请求直接转发到后端：
+
+```
+浏览器 ──▶ /api/* ──▶ Express 后端 ──▶ AI Provider API
+```
+
 ## 📋 开发指南
 
 ### 可用脚本
 
 | 命令 | 说明 |
 |------|------|
-| `npm run dev` | 启动开发服务器 |
+| `npm run dev` | 启动前端开发服务器 |
+| `npm run server` | 启动后端 API 服务 |
 | `npm run build` | 构建生产版本 |
 | `npm run preview` | 预览生产构建 |
 | `npm run lint` | ESLint 代码检查 |
+| `start.bat` / `./start.sh` | 一键启动前后端服务 |
 
 ### 开发规范
 
@@ -239,9 +295,9 @@ novelbuilder/
 | 数据持久化 | 100% | ✅ |
 | 书籍导出 | 100% | ✅ |
 | AI API 配置 | 100% | ✅ |
-| AI 书籍生成 | 0% | 🔜 开发中 |
-| 追加生成 | 0% | 🔜 开发中 |
-| **整体进度** | **81%** | 🚧 |
+| AI 书籍生成 | 80% | 🔜 开发中 |
+| 追加生成 | 80% | 🔜 开发中 |
+| **整体进度** | **85%** | 🚧 |
 
 ## 🤝 参与贡献
 

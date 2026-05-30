@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5298;
+const PORT = process.env.PORT || 5299;
 
 // ============ 日志系统 ============
 const LOG_DIR = path.join(__dirname, 'logs');
@@ -323,9 +323,6 @@ async function callAIStream(config, messages, options = {}) {
 
 // ============ 内容解析工具 ============
 
-const CHINESE_NUMBERS = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十',
-  '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十'];
-
 /**
  * 解析 AI 生成的小说内容
  */
@@ -636,7 +633,7 @@ app.post('/api/generate/stream', async (req, res) => {
 
 要求：
 1. 请先输出小说标题（格式：《书名》）
-2. 然后创作前5个章节
+2. 然后创作前2个章节
 3. 每个章节约2000字（允许±20%浮动）
 4. 章节之间保持剧情连贯
 5. 每个章节以"第X章 章节标题"开头（X为中文数字：一、二、三...）
@@ -765,7 +762,7 @@ app.post('/api/generate', async (req, res) => {
 
 要求：
 1. 请先输出小说标题（格式：《书名》）
-2. 然后创作前5个章节
+2. 然后创作前2个章节
 3. 每个章节约2000字（允许±20%浮动）
 4. 章节之间保持剧情连贯
 5. 每个章节以"第X章 章节标题"开头（X为中文数字：一、二、三...）
@@ -859,7 +856,7 @@ ${summary || '暂无摘要'}
 ${recentContent}
 
 要求：
-1. 从第${toChineseNumber(nextIndex)}章开始续写，创作接下来3个章节
+1. 从第${toChineseNumber(nextIndex)}章开始续写，创作接下来2个章节
 2. 保持与已有内容在剧情、人物、文风上的一致性
 3. 每个章节约2000字
 4. 每个章节以"第X章 章节标题"开头（X为中文数字，续接已有编号）
@@ -990,7 +987,7 @@ ${summary || '暂无摘要'}
 ${recentContent}
 
 要求：
-1. 从第${toChineseNumber(nextIndex)}章开始续写，创作接下来3个章节
+1. 从第${toChineseNumber(nextIndex)}章开始续写，创作接下来2个章节
 2. 保持与已有内容在剧情、人物、文风上的一致性
 3. 每个章节约2000字
 4. 每个章节以"第X章 章节标题"开头（X为中文数字，续接已有编号）
@@ -1103,6 +1100,16 @@ ${chaptersContent}
       data: null,
     });
   }
+});
+
+// ============ 健康检查端点 ============
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    configCount: configStore.providers.length,
+  });
 });
 
 // ============ 工具函数 ============

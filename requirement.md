@@ -1,5 +1,5 @@
 # AI 小说即时生成阅读器 — 产品需求文档（PRD）
-
+# novelbuilder
 ---
 
 ## 文档信息
@@ -23,6 +23,7 @@
 | v1.0 | 2026-05-28 | - | 技术评审v1，修复20项问题 | ❌ 已废弃 |
 | v2.0 | 2026-05-28 | - | 按阿里巴巴规范重构，补充接口、验收标准、异常处理 | ❌ 已废弃 |
 | v2.1 | 2026-05-29 | - | 补充开发进度、已完成功能、技术实现细节 | ✅ 当前版本 |
+| v2.2 | 2026-05-30 | - | 新增一键启动脚本（start.bat / start.sh），更新项目结构说明 | ✅ 当前版本 |
 
 ### 文档约定
 
@@ -112,7 +113,7 @@
 | F-009 | AI API配置 | 【P0】 | 设置 | ✅ 已完成 |
 | F-010 | API连接测试 | 【P1】 | 设置 | ✅ 已完成 |
 | F-011 | Prompt配置 | 【P2】 | 设置 | ⬜ 待开发 |
-| F-012 | 数据备份恢复 | 【P1】 | 存储 | ⬜ 待开发 |
+| F-012 | 数据备份恢复 | 【P1】 | 存储 | ✅ 已完成 |
 | F-013 | PWA支持 | 【P2】 | 扩展 | ⬜ 待开发 |
 | F-014 | 书库搜索 | 【P1】 | 书库 | ✅ 已完成 |
 
@@ -411,7 +412,7 @@ const CHAPTER_PATTERNS = [
 
 | 参数 | 值 | 说明 |
 |------|-----|------|
-| 首次生成章节数 | 5 | 固定值 |
+| 首次生成章节数 | 2 | 固定值 |
 | 每章目标字数 | 2000字 | 允许±20%浮动 |
 | 章节编号格式 | 中文数字（第一章、第二章...） | 【强制】 |
 | 输出格式 | 纯文本，章节间空行分隔 | 【强制】 |
@@ -435,7 +436,7 @@ const CHAPTER_PATTERNS = [
 | AC-005-4 | 生成失败显示错误信息和重试按钮 |
 | AC-005-5 | 生成过程中可取消 |
 | AC-005-6 | 生成的书籍名称由AI自动生成 |
-| AC-005-7 | 章节数量正确（5章） |
+| AC-005-7 | 章节数量正确（2章） |
 | AC-005-8 | 章节编号格式正确（中文数字） |
 
 #### 2.6.6 异常处理
@@ -470,7 +471,7 @@ const CHAPTER_PATTERNS = [
 
 | 参数 | 值 | 说明 |
 |------|-----|------|
-| 追加章节数 | 3 | 固定值 |
+| 追加章节数 | 2 | 固定值 |
 | 上下文内容 | 压缩摘要 + 最近1-2章完整内容 | 【强制】 |
 | 章节编号 | 续接已有章节 | 【强制】 |
 
@@ -1129,7 +1130,7 @@ async function checkStorageQuota() {
 
 要求：
 1. 请先输出小说标题（格式：书名：{title}）
-2. 然后创作前5个章节
+2. 然后创作前2个章节
 3. 每个章节约2000字（允许±20%浮动）
 4. 章节之间保持剧情连贯
 5. 每个章节以"第X章 章节标题"开头（X为中文数字：一、二、三...）
@@ -1159,7 +1160,7 @@ async function checkStorageQuota() {
 {recentContent}
 
 要求：
-1. 从第{nextIndex}章开始续写，创作接下来3个章节
+1. 从第{nextIndex}章开始续写，创作接下来2个章节
 2. 保持与已有内容在剧情、人物、文风上的一致性
 3. 每个章节约2000字
 4. 每个章节以"第X章 章节标题"开头（X为中文数字，续接已有编号）
@@ -1367,23 +1368,61 @@ src/
 │   ├── react.svg
 │   └── vite.svg
 ├── components/
-│   ├── CreateAIDialog/
-│   │   └── index.tsx           # AI书籍创建对话框（骨架，待完善）
-│   └── Sidebar/
-│       └── index.tsx           # 侧边栏书库组件
+│   ├── CreateAIDialog/         # AI 创建对话框模块
+│   │   ├── index.tsx           # 主对话框组件
+│   │   ├── GenerateProgress.tsx# 生成进度展示
+│   │   └── useGenerateNovel.ts # 生成逻辑 Hook
+│   └── Sidebar/                # 侧边栏书库模块
+│       ├── index.tsx           # 侧边栏主组件
+│       ├── components/         # 侧边栏子组件（拆分后）
+│       │   └── SidebarComponents.tsx
+│       └── hooks/              # 侧边栏逻辑 Hooks
+│           ├── useBookActions.tsx
+│           ── useSidebarState.ts
 ├── layouts/
 │   └── RootLayout.tsx          # 根布局（侧边栏 + 阅读区）
 ├── pages/
-│   ├── ReaderPage.tsx          # 阅读器主页面
-│   └── SettingsPage.tsx        # 设置页面
+│   ├── ReaderPage/             # 阅读器模块（拆分后）
+│   │   ├── index.tsx           # 主页面组件
+│   │   ├── components/         # 阅读器子组件
+│   │   │   └── ReaderComponents.tsx
+│   │   └── hooks/              # 阅读器逻辑 Hooks
+│   │       ├── useAppendGeneration.ts
+│   │       ├── useKeyboardNav.ts
+│   │       └── useReaderState.ts
+│   └── SettingsPage/           # 设置页模块（拆分后）
+│       ├── index.tsx           # 主页面组件
+│       ├── components/         # 设置页子组件
+│       │   ├── AIConfigSection.tsx
+│       │   └── ReadingSettings.tsx
+│       └── hooks/              # 设置页逻辑 Hooks
+│           ├── useAIConfig.ts
+│           ├── useBackupRestore.ts
+│           └── useStorage.ts
 ├── routes/
 │   └── index.tsx               # 路由配置
-├── services/
+├── services/                   # 服务层
+│   ├── aiClient.ts             # AI API 客户端
+│   ├── aiConfig.ts             # AI 配置服务
+│   ├── aiGenerate.ts           # AI 生成服务
+│   ├── aiService.ts            # AI 服务入口
+│   ├── aiStream.ts             # AI 流式响应
+│   ├── aiTypes.ts              # AI 类型定义
+│   ├── backupExport.ts         # 备份导出
+│   ├── backupImport.ts         # 备份导入
+│   ├── backupRestore.ts        # 备份恢复
+│   ├── backupService.ts        # 备份服务入口
+│   ├── backupTypes.ts          # 备份类型
+│   ├── backupUtils.ts          # 备份工具函数
 │   ├── db.ts                   # IndexedDB 数据库实例（Dexie.js）
-│   └── importService.ts        # 本地文件导入服务
-├── stores/
-│   ├── bookStore.ts            # 书籍状态管理（Zustand）
-│   └── settingsStore.ts        # 设置状态管理（Zustand）
+│   ├── exportService.ts        # 书籍导出服务
+│   ├── importEncoding.ts       # 编码检测
+│   ├── importService.ts        # 导入服务入口
+│   ├── importSplitter.ts       # 章节分割
+│   └── importTypes.ts          # 导入类型
+├── stores/                     # 状态管理（Zustand）
+│   ├── bookStore.ts            # 书籍状态
+│   └── settingsStore.ts        # 设置状态
 ├── styles/
 │   └── global.css              # 全局样式 + 主题样式
 ├── types/
@@ -1394,6 +1433,46 @@ src/
 ├── main.tsx                    # Vite 入口
 └── vite-env.d.ts               # Vite 类型声明
 ```
+
+### 11.2.1 代码拆分记录
+
+**拆分日期：** 2026-05-30
+
+**拆分原则：**
+- 按功能模块划分目录（ReaderPage、SettingsPage、Sidebar、CreateAIDialog）
+- 每个模块下分 `components/`（子组件）和 `hooks/`（自定义 Hooks）
+- services 层按功能前缀拆分（ai*、backup*、import*、export*）
+
+**拆分过程：**
+| 原始文件 | 拆分为 | 说明 |
+|----------|--------|------|
+| `src/pages/ReaderPage.tsx` | `pages/ReaderPage/index.tsx` + `pages/ReaderPage/components/ReaderComponents.tsx` + `pages/ReaderPage/hooks/*` | 主页面 + 组件 + Hooks（键盘导航、阅读状态、追加生成） |
+| `src/pages/SettingsPage.tsx` | `pages/SettingsPage/index.tsx` + `pages/SettingsPage/components/*` + `pages/SettingsPage/hooks/*` | 主页面 + 子组件（AI配置、阅读设置）+ Hooks（AI配置、备份恢复、存储） |
+| `src/components/Sidebar/index.tsx` | `Sidebar/index.tsx` + `Sidebar/components/SidebarComponents.tsx` + `Sidebar/hooks/*` | 主组件 + 子组件（头部、筛选、列表项、弹窗）+ Hooks（书籍操作、侧边栏状态） |
+| `src/components/CreateAIDialog/index.tsx` | `CreateAIDialog/index.tsx` + `CreateAIDialog/GenerateProgress.tsx` + `CreateAIDialog/useGenerateNovel.ts` | 主对话框 + 进度组件 + 生成逻辑 Hook |
+| `src/services/importService.ts` | `services/importService.ts` + `services/importEncoding.ts` + `services/importSplitter.ts` + `services/importTypes.ts` | 入口 + 编码检测 + 章节分割 + 类型定义 |
+| `src/services/backupService.ts` | `services/backupService.ts` + `services/backupExport.ts` + `services/backupImport.ts` + `services/backupRestore.ts` + `services/backupTypes.ts` + `services/backupUtils.ts` | 入口 + 导出 + 导入 + 恢复 + 类型 + 工具 |
+| `src/services/aiService.ts` | `services/aiService.ts` + `services/aiClient.ts` + `services/aiConfig.ts` + `services/aiGenerate.ts` + `services/aiStream.ts` + `services/aiTypes.ts` | 入口 + 客户端 + 配置 + 生成 + 流式 + 类型 |
+
+**拆分后收益：**
+- 单文件行数减少，可读性提升
+- Hooks 独立后可复用、可单独测试
+- 按模块组织，新开发者更容易定位代码
+
+### 11.2.2 启动脚本
+
+项目提供了一键启动脚本，可同时启动前后端服务：
+
+| 脚本 | 适用平台 | 说明 |
+|------|----------|------|
+| `start.bat` | Windows | 双击运行或命令行执行 `.\start.bat` |
+| `start.sh` | macOS/Linux | 首次运行需 `chmod +x start.sh`，然后执行 `./start.sh` |
+
+**脚本功能：**
+1. 检查 Node.js 环境
+2. 自动安装缺失依赖
+3. 启动后端服务（端口 5299）
+4. 启动前端开发服务器（端口 5298）
 
 ### 11.3 已完成功能清单
 
@@ -1478,7 +1557,7 @@ src/
 | 生成历史表 | ✅ 完成 | `db.ts` | 表结构已定义，字段完整 |
 | 排版设置持久化 | ✅ 完成 | `settingsStore.ts` | LocalStorage |
 | AI 配置持久化 | ✅ 完成 | `settingsStore.ts` | LocalStorage |
-| 存储预警机制 | ⬜ 待开发 | — | — |
+| 存储预警机制（60%阈值） | ✅ 完成 | `SettingsPage.tsx` | 60%/80%/90% 三级预警 + 清理建议 |
 
 #### ✅ F-008 书籍导出（已完成）
 
@@ -1539,10 +1618,8 @@ src/
 | F-006 | 追加生成 | 【P0】 | 触发逻辑、摘要策略均未实现 |
 | F-010 | API 连接测试（完善） | 【P1】 | 已支持 OpenAI 格式，需扩展 Anthropic 等 |
 | F-011 | Prompt 配置 | 【P2】 | — |
-| F-012 | 数据备份恢复 | 【P1】 | — |
 | F-013 | PWA 支持 | 【P2】 | — |
 | 预设排版方案 | 【P2】 | 设置页面增加预设方案按钮 |
-| 存储预警机制 | 【P1】 | 60% 阈值检测 |
 
 ### 11.4 开发进度总览
 
@@ -1570,8 +1647,6 @@ src/
 
 **高优先级（P1 — 体验完善）：**
 3. **API 连接测试完善（F-010）**：支持 Anthropic 和 OpenAI Compatible 格式的连接测试
-4. **数据备份恢复（F-012）**：JSON 格式书库导入导出
-5. **存储预警机制**：IndexedDB 使用量达到 60% 阈值时提醒用户
 
 **中优先级（P2 — 功能增强）：**
 6. 预设排版方案快速切换（默认/护眼/大字/夜间）

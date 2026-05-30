@@ -10,14 +10,19 @@ export default defineConfig({
     },
   },
   server: {
+    port: 5298,
     host: '0.0.0.0',
-    open: '/#/settings', // 开发启动时自动打开设置页面
+    open: true,
     proxy: {
-      // 开发环境 AI API 代理
-      '/ai-api': {
-        target: 'http://localhost:5298',
+      // 前端 /api 转发到后端（5299端口）
+      '/api': {
+        target: 'http://localhost:5299',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/ai-api/, ''),
+      },
+      // 健康检查端点
+      '/health': {
+        target: 'http://localhost:5299',
+        changeOrigin: true,
       },
     },
   },
