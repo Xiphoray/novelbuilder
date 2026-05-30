@@ -15,7 +15,7 @@ export default defineConfig({
     proxy: {
       // 开发环境 AI API 代理
       '/ai-api': {
-        target: 'https://api.example.com',
+        target: 'http://localhost:5298',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/ai-api/, ''),
       },

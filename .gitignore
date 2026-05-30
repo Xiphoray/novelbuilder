@@ -12,6 +12,16 @@ dist
 dist-ssr
 *.local
 
+# Server
+server/logs/
+server/config.json
+server/.env
+
+# Test scripts
+create_test.cjs
+server/test-*.cjs
+server/test-*.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

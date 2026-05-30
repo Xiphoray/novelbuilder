@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Typography,
   Form,
@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { AIProviderConfig, AIProviderType, ThemeType, ReadingSettings } from '@/types';
 import { db } from '@/services/db';
+import { saveServerConfig, testConnection, getServerConfig } from '@/services/aiService';
 import { v4 as uuidv4 } from 'uuid';
 
 const { Title, Text } = Typography;
@@ -50,11 +51,30 @@ export default function SettingsPage() {
     readingForm.setFieldsValue(readingSettings);
   }, [readingForm, readingSettings]);
 
+  // 同步配置到后端
+  const syncConfigToServer = useCallback(async (config: AIProviderConfig) => {
+    try {
+      await saveServerConfig({
+        id: config.id,
+        name: config.name,
+        provider: config.provider,
+        baseUrl: config.baseUrl,
+        apiKey: (config as unknown as { apiKey?: string }).apiKey || '',
+        modelId: config.modelId,
+      });
+      console.log('[Settings] Config synced to server:', config.id);
+    } catch (err) {
+      console.warn('[Settings] Failed to sync config to server:', err);
+    }
+  }, []);
+
   const handleSaveAIConfig = async () => {
     try {
       const values = await form.validateFields();
       if (editingId) {
-        await updateAIConfig({ ...values, id: editingId } as AIProviderConfig);
+        const updatedConfig = { ...values, id: editingId } as AIProviderConfig;
+        await updateAIConfig(updatedConfig);
+        await syncConfigToServer(updatedConfig);
         message.success('AI 配置已更新');
       } else {
         const newConfig: AIProviderConfig = {
@@ -62,6 +82,7 @@ export default function SettingsPage() {
           id: uuidv4(),
         };
         await addAIConfig(newConfig);
+        await syncConfigToServer(newConfig);
         message.success('AI 配置已添加');
       }
       form.resetFields();
@@ -111,10 +132,9 @@ export default function SettingsPage() {
   const handleTestConnection = async () => {
     try {
       const values = form.getFieldsValue();
-      const { baseUrl, provider } = values as AIProviderConfig;
+      const { baseUrl, provider, modelId } = values as AIProviderConfig;
       const apiKey = (values as { apiKey?: string }).apiKey;
 
-      // 手动检查关键字段
       if (!baseUrl) {
         message.error('请填写 API Base URL');
         return;
@@ -129,126 +149,34 @@ export default function SettingsPage() {
       }
 
       const loadingKey = 'test';
-      message.loading({ content: '测试连接中...', key: loadingKey, duration: 0 });
+      message.loading({ content: '通过后端测试连接中...', key: loadingKey, duration: 0 });
 
-      const headers: Record<string, string> = {};
-
-      if (provider === 'anthropic') {
-        // Anthropic API: 使用 x-api-key 头
-        headers['x-api-key'] = apiKey;
-        headers['anthropic-version'] = '2023-06-01';
-        headers['content-type'] = 'application/json';
-      } else {
-        // OpenAI / OpenAI Compatible: 使用 Authorization Bearer
-        headers['Authorization'] = `Bearer ${apiKey}`;
-      }
-
-      const fetchUrl = getProxiedUrl(baseUrl);
-
-      // 尝试 /models 端点
-      let modelsSuccess = false;
-      let modelList: string[] = [];
-
-      try {
-        const res = await fetch(`${fetchUrl}/models`, { headers });
-        if (res.ok) {
-          const data = await res.json();
-          modelsSuccess = true;
-          // 解析模型列表（OpenAI 格式：{ data: [{ id: "xxx" }] }）
-          if (data?.data && Array.isArray(data.data)) {
-            modelList = data.data.map((m: { id: string }) => m.id).filter(Boolean);
-          }
-        }
-      } catch {
-        // /models 端点不可用，继续尝试 chat completion
-      }
-
-      // 如果 /models 不可用，尝试发送一个简单的 chat completion 请求
-      if (!modelsSuccess) {
-        let chatUrl = `${fetchUrl}/chat/completions`;
-        const chatHeaders: Record<string, string> = { ...headers, 'Content-Type': 'application/json' };
-
-        if (provider === 'anthropic') {
-          // Anthropic 使用 /messages 端点
-          chatUrl = `${fetchUrl}/messages`;
-          chatHeaders['anthropic-version'] = '2023-06-01';
-          chatHeaders['content-type'] = 'application/json';
-
-          const chatRes = await fetch(chatUrl, {
-            method: 'POST',
-            headers: chatHeaders,
-            body: JSON.stringify({
-              model: (values as AIProviderConfig).modelId || 'claude-3-haiku-20240307',
-              max_tokens: 10,
-              messages: [{ role: 'user', content: 'Hi' }],
-            }),
-          });
-
-          if (chatRes.ok) {
-            const chatData = await chatRes.json();
-            const modelName = chatData?.model || (values as AIProviderConfig).modelId;
-            message.success({
-              content: `✅ 连接成功！模型：${modelName}`,
-              key: loadingKey,
-              duration: 5,
-            });
-            return;
-          } else {
-            const errText = await chatRes.text().catch(() => '');
-            let errMsg = `HTTP ${chatRes.status}`;
-            try {
-              const errJson = JSON.parse(errText);
-              errMsg = errJson?.error?.message || errMsg;
-            } catch { /* ignore */ }
-            message.error({ content: `连接失败：${errMsg}`, key: loadingKey, duration: 5 });
-            return;
-          }
-        } else {
-          // OpenAI / OpenAI Compatible
-          const chatRes = await fetch(chatUrl, {
-            method: 'POST',
-            headers: chatHeaders,
-            body: JSON.stringify({
-              model: (values as AIProviderConfig).modelId || 'gpt-3.5-turbo',
-              max_tokens: 10,
-              messages: [{ role: 'user', content: 'Hi' }],
-            }),
-          });
-
-          if (chatRes.ok) {
-            const chatData = await chatRes.json();
-            const modelName = chatData?.model || (values as AIProviderConfig).modelId;
-            message.success({
-              content: `✅ 连接成功！模型：${modelName}`,
-              key: loadingKey,
-              duration: 5,
-            });
-            return;
-          } else {
-            const errText = await chatRes.text().catch(() => '');
-            let errMsg = `HTTP ${chatRes.status}`;
-            try {
-              const errJson = JSON.parse(errText);
-              errMsg = errJson?.error?.message || errMsg;
-            } catch { /* ignore */ }
-            message.error({ content: `连接失败：${errMsg}`, key: loadingKey, duration: 5 });
-            return;
-          }
-        }
-      }
-
-      // /models 成功
-      const modelInfo = modelList.length > 0
-        ? `，可用模型 ${modelList.length} 个：${modelList.slice(0, 5).join(', ')}${modelList.length > 5 ? '...' : ''}`
-        : '';
-      message.success({
-        content: `✅ 连接成功！${modelInfo}`,
-        key: loadingKey,
-        duration: 8,
+      const result = await testConnection({
+        provider,
+        baseUrl,
+        apiKey,
+        modelId: modelId || '',
       });
+
+      if (result.success) {
+        const modelInfo = result.models && result.models.length > 0
+          ? `，可用模型 ${result.models.length} 个：${result.models.slice(0, 5).join(', ')}${result.models.length > 5 ? '...' : ''}`
+          : '';
+        message.success({
+          content: `✅ 连接成功！${modelInfo}`,
+          key: loadingKey,
+          duration: 8,
+        });
+      } else {
+        message.error({
+          content: `连接失败：${result.error || '未知错误'}`,
+          key: loadingKey,
+          duration: 5,
+        });
+      }
     } catch (err) {
       console.error('[testConnection]', err);
-      message.error({ content: '连接测试出错，请检查网络或配置', key: 'test' });
+      message.error({ content: '连接测试出错，请检查后端服务是否运行', key: 'test' });
     }
   };
 

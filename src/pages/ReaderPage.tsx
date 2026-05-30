@@ -1,15 +1,19 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { Typography, Empty, Progress, Button, Drawer, FloatButton } from 'antd';
+import { Typography, Empty, Progress, Button, Drawer, FloatButton, Spin, App } from 'antd';
 import {
   DownloadOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
   MenuOutlined,
   ToTopOutlined,
+  PlusOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
 import { useBookStore } from '@/stores/bookStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { exportBookAsTxt } from '@/services/exportService';
+import { appendChapters, generateSummary } from '@/services/aiService';
+import type { Chapter } from '@/types';
 
 const { Title, Paragraph } = Typography;
 
@@ -21,8 +25,12 @@ export default function ReaderPage() {
   const updateReadingProgress = useBookStore((s) => s.updateReadingProgress);
   const readingSettings = useSettingsStore((s) => s.readingSettings);
 
+  const { message } = App.useApp();
   const [tocOpen, setTocOpen] = useState(false);
   const [showBackTop, setShowBackTop] = useState(false);
+  const [appendLoading, setAppendLoading] = useState(false);
+  const [appendProgress, setAppendProgress] = useState('');
+  const [canAppend, setCanAppend] = useState(true);
 
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -145,6 +153,118 @@ export default function ReaderPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentBook, currentChapters, currentChapterIndex, setCurrentChapterIndex]);
+
+  // F-006: 追加生成处理
+  const handleAppendGeneration = useCallback(async () => {
+    if (!currentBook || appendLoading) return;
+    if (currentBook.type !== 'ai' || !currentBook.aiConfig) return;
+
+    setAppendLoading(true);
+    setAppendProgress('正在准备上下文...');
+
+    try {
+      console.log('[Reader] 开始追加生成', {
+        bookId: currentBook.id,
+        title: currentBook.title,
+        currentChapterCount: currentChapters.length,
+      });
+
+      // 获取最近3章内容
+      const recentChapters = currentChapters.slice(-3).map((ch) => ({
+        index: ch.index,
+        title: ch.title,
+        content: ch.content,
+      }));
+
+      // 生成摘要（如果有摘要则使用，否则用 style + prompt）
+      let summary = currentBook.summary || '';
+      if (!summary && currentChapters.length > 3) {
+        setAppendProgress('正在生成内容摘要...');
+        try {
+          const summaryResult = await generateSummary({
+            bookTitle: currentBook.title,
+            chapters: currentChapters.slice(0, -3).map((ch) => ({
+              title: ch.title,
+              content: ch.content,
+            })),
+          });
+          summary = summaryResult.summary;
+          console.log('[Reader] 摘要生成完成', { summaryLength: summary.length });
+        } catch (err) {
+          console.warn('[Reader] 摘要生成失败，使用原始摘要', err);
+        }
+      }
+
+      setAppendProgress('AI 正在续写章节...');
+
+      const result = await appendChapters({
+        bookId: currentBook.id,
+        bookTitle: currentBook.title,
+        style: currentBook.aiConfig.style,
+        summary,
+        recentChapters,
+        currentChapterCount: currentChapters.length,
+      });
+
+      if (result.chapters.length === 0) {
+        message.warning('AI 未能生成新章节');
+        return;
+      }
+
+      setAppendProgress('正在保存新章节...');
+
+      // 保存新章节到数据库
+      const { v4: uuidv4 } = await import('uuid');
+      const newChapters: Chapter[] = result.chapters.map((ch) => ({
+        id: uuidv4(),
+        bookId: currentBook.id,
+        index: ch.index,
+        title: ch.title,
+        content: ch.content,
+        wordCount: ch.wordCount,
+        status: 'complete' as const,
+        createdAt: Date.now(),
+      }));
+
+      // 更新 bookStore
+      const { appendChapters: storeAppendChapters } = useBookStore.getState();
+      await storeAppendChapters(currentBook.id, newChapters);
+
+      console.log('[Reader] 追加生成完成', {
+        newChapterCount: newChapters.length,
+        totalChapters: currentChapters.length + newChapters.length,
+      });
+
+      message.success(`已续写 ${newChapters.length} 章，共 ${currentChapters.length + newChapters.length} 章`);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : '追加生成失败';
+      console.error('[Reader] 追加生成失败:', err);
+      message.error(errorMsg);
+    } finally {
+      setAppendLoading(false);
+      setAppendProgress('');
+    }
+  }, [currentBook, currentChapters, appendLoading, message]);
+
+  // 滚动检测：读到最后一章 80% 时提示追加生成
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !currentBook || currentBook.type !== 'ai') return;
+
+    const handleScroll = () => {
+      const isLastChapter = currentChapterIndex >= currentChapters.length - 1;
+      if (!isLastChapter || appendLoading) {
+        setCanAppend(false);
+        return;
+      }
+
+      const scrollPercent = container.scrollTop / (container.scrollHeight - container.clientHeight);
+      setCanAppend(scrollPercent > 0.6);
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [currentChapterIndex, currentChapters.length, currentBook, appendLoading]);
 
   // 点击"下一章"时检查是否需要触发 AI 追加生成
   const handleNextChapter = useCallback(() => {
@@ -382,13 +502,67 @@ export default function ReaderPage() {
           <Empty description="章节加载失败" />
         )}
 
+        {/* F-006: AI 追加生成提示区 */}
+        {currentBook.type === 'ai' && currentBook.aiConfig && (
+          <div style={{ marginTop: 32, textAlign: 'center' }}>
+            {(appendLoading || canAppend) && (
+              <div
+                style={{
+                  padding: '24px 16px',
+                  borderTop: '1px dashed #d9d9d9',
+                }}
+              >
+                {appendLoading ? (
+                  <div>
+                    <Spin indicator={<LoadingOutlined spin />} />
+                    <div style={{ marginTop: 12, color: '#666' }}>
+                      {appendProgress || 'AI 正在续写...'}
+                    </div>
+                  </div>
+                ) : canAppend ? (
+                  <div>
+                    <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+                      📖 已接近最新章节，是否继续？
+                    </Typography.Text>
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      size="large"
+                      onClick={handleAppendGeneration}
+                    >
+                      续写 3 章
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            )}
+
+            {!appendLoading && !canAppend && currentChapterIndex >= currentChapters.length - 1 && (
+              <div style={{ padding: '16px', color: '#999' }}>
+                <Typography.Text type="secondary">
+                  继续阅读以触发自动续写，或
+                </Typography.Text>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={handleAppendGeneration}
+                  style={{ padding: '0 4px' }}
+                >
+                  手动续写
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 底部导航 */}
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginTop: 48,
+            marginTop: 24,
             paddingTop: 24,
             borderTop: '1px solid var(--border-color, #e8e8e8)',
           }}
