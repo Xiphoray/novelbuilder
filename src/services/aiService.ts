@@ -1,5 +1,3 @@
-import type { Chapter } from '@/types';
-
 const API_BASE = 'http://localhost:5298/api';
 
 // ============ 日志工具 ============
@@ -7,6 +5,8 @@ function logInfo(message: string, data?: unknown) {
   console.log(`[AI Service] ${message}`, data ?? '');
 }
 
+// 保留 logError 以便将来使用
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function logError(message: string, data?: unknown) {
   console.error(`[AI Service] ❌ ${message}`, data ?? '');
 }

@@ -171,19 +171,6 @@ export default function SettingsPage() {
     }
   };
 
-  /** 将 baseUrl 转为 Vite 代理路径（仅开发环境），解决 CORS 跨域问题 */
-  const getProxiedUrl = (url: string): string => {
-    if (import.meta.env.DEV) {
-      try {
-        const urlObj = new URL(url);
-        return `/ai-api${urlObj.pathname}${urlObj.search}`;
-      } catch {
-        return url;
-      }
-    }
-    return url;
-  };
-
   const handleTestConnection = async () => {
     try {
       const values = form.getFieldsValue();
