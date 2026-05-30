@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Modal, Input, Tag, Space, Typography, Spin, App, Progress, Button } from 'antd';
+import { Modal, Input, Tag, Space, Typography, Spin, App, Progress } from 'antd';
 import { RobotOutlined, ClockCircleOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { v4 as uuidv4 } from 'uuid';
 import { useBookStore } from '@/stores/bookStore';
@@ -24,7 +24,7 @@ export default function CreateAIDialog({ open, onClose }: CreateAIDialogProps) {
   const [progress, setProgress] = useState('');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [streamContent, setStreamContent] = useState('');
-  const [useStream, setUseStream] = useState(true);
+  const [useStream] = useState(true);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedRef = useRef(0);
 
