@@ -177,26 +177,62 @@ novelbuilder/
 ├── public/                      # 静态资源
 │   ├── favicon.svg
 │   └── icons.svg
-├── server/
-│   ├── index.js                 # Express 后端 API 服务
+├── server/                      # Express 后端服务
+│   ├── index.js                 # 入口文件（中间件、路由注册）
 │   ├── config.json              # AI 配置存储
-│   └── logs/                    # 运行日志
+│   ├── logs/                    # 运行日志
+│   ├── routes/                  # API 路由
+│   │   ├── config.js            # 配置管理路由（CRUD、测试连接）
+│   │   └── generate.js          # AI 生成路由（首次/追加/摘要/SSE）
+│   └── utils/                   # 后端工具模块
+│       ├── aiClient.js          # AI API 客户端（OpenAI/Anthropic 适配）
+│       ├── configStore.js       # 配置存储管理
+│       ├── contentParser.js     # 小说内容解析
+│       ├── helpers.js           # 工具函数（中文数字转换）
+│       └── logger.js            # 日志系统
 ├── src/
 │   ├── assets/                  # 图片资源
 │   ├── components/
 │   │   ├── CreateAIDialog/      # AI 书籍创建对话框
+│   │   │   ├── index.tsx        # 主组件
+│   │   │   ├── GenerateProgress.tsx  # 生成进度组件
+│   │   │   └── useGenerateNovel.ts   # 生成逻辑 Hook
 │   │   └── Sidebar/             # 侧边栏书库组件
+│   │       ├── index.tsx        # 主组件
+│   │       ├── components/      # 子组件
+│   │       └── hooks/           # 自定义 Hooks
 │   ├── layouts/
 │   │   └── RootLayout.tsx       # 根布局（侧边栏 + 阅读区）
 │   ├── pages/
-│   │   ├── ReaderPage.tsx       # 📖 阅读器主页面
-│   │   └── SettingsPage.tsx     # ⚙️ 设置页面
+│   │   ├── ReaderPage/          # 📖 阅读器模块
+│   │   │   ├── index.tsx        # 主页面
+│   │   │   ├── components/      # 阅读器子组件
+│   │   │   └── hooks/           # 阅读器 Hooks
+│   │   └── SettingsPage/        # ⚙️ 设置模块
+│   │       ├── index.tsx        # 主页面
+│   │       ├── components/      # 设置页子组件
+│   │       └── hooks/           # 设置页 Hooks
 │   ├── routes/
 │   │   └── index.tsx            # 路由配置
 │   ├── services/
 │   │   ├── db.ts                # IndexedDB 数据库（Dexie.js）
-│   │   ├── exportService.ts     # 书籍导出服务
-│   │   └── importService.ts     # 文件导入与编码检测
+│   │   ├── aiClient.ts          # 前端 AI API 客户端
+│   │   ├── aiConfig.ts          # AI 配置管理
+│   │   ├── aiGenerate.ts        # AI 生成服务
+│   │   ├── aiStream.ts          # SSE 流式处理
+│   │   ├── aiTypes.ts           # AI 类型定义
+│   │   ├── aiService.ts         # AI 服务（兼容层）
+│   │   ├── backupExport.ts      # 备份导出
+│   │   ├── backupImport.ts      # 备份导入
+│   │   ├── backupRestore.ts     # 备份恢复
+│   │   ├── backupService.ts     # 备份服务
+│   │   ├── backupTypes.ts       # 备份类型定义
+│   │   ├── backupUtils.ts       # 备份工具
+│   │   ├── exportService.ts     # 书籍导出
+│   │   ├── importEncoding.ts    # 编码检测
+│   │   ├── importService.ts     # 文件导入
+│   │   ├── importSplitter.ts    # 章节分割
+│   │   └── importTypes.ts       # 导入类型定义
 │   ├── stores/
 │   │   ├── bookStore.ts         # 书籍状态管理
 │   │   └── settingsStore.ts     # 设置状态管理
