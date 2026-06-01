@@ -5,8 +5,8 @@
 import { useState, useMemo } from 'react';
 import type { Book } from '@/types';
 
-type SortOption = 'lastRead' | 'title' | 'recent';
-type FilterOption = 'all' | 'import' | 'ai';
+export type SortOption = 'lastRead' | 'title' | 'recent';
+export type FilterOption = 'all' | 'import' | 'ai';
 
 export function useSidebarState(books: Book[]) {
   const [search, setSearch] = useState('');

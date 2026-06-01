@@ -58,11 +58,13 @@ export async function readSSE(
   endpoint: string,
   body: unknown,
   callbacks: import('./aiTypes').StreamCallbacks,
+  options?: { signal?: AbortSignal },
 ): Promise<void> {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+    signal: options?.signal,
   });
 
   if (!response.ok) {
@@ -74,34 +76,45 @@ export async function readSSE(
 
   const decoder = new TextDecoder();
   let buffer = '';
+  let accumulated = '';
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() || '';
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith('data: ')) continue;
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data: ')) continue;
 
-      try {
-        const payload = JSON.parse(trimmed.slice(6));
+        try {
+          const payload = JSON.parse(trimmed.slice(6));
 
-        if (payload.type === 'start') {
-          callbacks.onStart?.(payload.prompt);
-        } else if (payload.type === 'delta') {
-          callbacks.onDelta?.(payload.content, '');
-        } else if (payload.type === 'done') {
-          callbacks.onDone?.(payload.data);
-        } else if (payload.type === 'error') {
-          callbacks.onError?.(payload.message);
+          if (payload.type === 'start') {
+            callbacks.onStart?.(payload.prompt);
+          } else if (payload.type === 'delta') {
+            accumulated += payload.content || '';
+            callbacks.onDelta?.(payload.content, accumulated);
+          } else if (payload.type === 'done') {
+            callbacks.onDone?.(payload.data);
+          } else if (payload.type === 'error') {
+            callbacks.onError?.(payload.message);
+          }
+        } catch {
+          // 忽略解析错误
         }
-      } catch {
-        // 忽略解析错误
       }
     }
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('用户已取消生成');
+    }
+    throw error;
+  } finally {
+    reader.releaseLock();
   }
 }

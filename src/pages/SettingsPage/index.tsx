@@ -43,22 +43,48 @@ export default function SettingsPage() {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 48px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24, gap: 12 }}>
-        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/')} />
-        <Title level={3} style={{ margin: 0 }}>⚙️ 设置</Title>
+    <div className="settings-page">
+      <div className="settings-page__inner">
+        <div className="settings-page__hero">
+          <div className="settings-page__hero-top">
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate('/')}
+              className="settings-page__back"
+            />
+            <Title level={3} style={{ margin: 0 }}>⚙️ 设置中心</Title>
+          </div>
+          <p className="settings-page__hero-text">
+            统一管理 AI Provider、阅读体验与常用预设，让创作与阅读流程更顺手。
+          </p>
+        </div>
+
+        <div className="settings-page__section">
+          <AIConfigSection
+            form={form}
+            aiConfigs={aiConfigs}
+            editingId={editingId}
+            backendOnline={backendOnline}
+            modelInfoMap={modelInfoMap}
+            setEditingId={setEditingId}
+            onSave={handleSave}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onSetActive={handleSetActive}
+            onTest={handleTestConnection}
+          />
+        </div>
+
+        <div className="settings-page__grid">
+          <div className="settings-page__section">
+            <ReadingPresets readingSettings={readingSettings} applyPreset={applyPreset} />
+          </div>
+          <div className="settings-page__section">
+            <ReadingSettingsForm form={readingForm} onSave={handleSaveReadingSettings} />
+          </div>
+        </div>
       </div>
-
-      <AIConfigSection
-        form={form} aiConfigs={aiConfigs} editingId={editingId} backendOnline={backendOnline}
-        modelInfoMap={modelInfoMap} setEditingId={setEditingId}
-        onSave={handleSave} onEdit={handleEdit} onDelete={handleDelete}
-        onSetActive={handleSetActive} onTest={handleTestConnection}
-      />
-
-      <ReadingPresets readingSettings={readingSettings} applyPreset={applyPreset} />
-
-      <ReadingSettingsForm form={readingForm} onSave={handleSaveReadingSettings} />
     </div>
   );
 }

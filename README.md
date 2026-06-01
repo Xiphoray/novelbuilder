@@ -65,8 +65,8 @@ Novel Builder 是一款 Web 端 AI 小说即时生成阅读器。它支持：
 | 功能 | 说明 |
 |------|------|
 | 🎭 风格选择 | 玄幻、仙侠、都市、科幻等 11 种风格 |
-| 📝 AI 生成 | 首次生成 2 章小说内容 |
-| 🔄 追加生成 | 阅读到最后章节时手动续写 2 章 |
+| 📝 AI 生成 | 首次生成 2 章小说内容，支持流式生成反馈 |
+| 🔄 追加生成 | 阅读到最后章节 80% 自动续写 2 章，也可手动触发 |
 | 🔌 多 Provider | OpenAI / Anthropic / OpenAI Compatible |
 
 ### 存储管理
@@ -149,6 +149,12 @@ npm run preview
 4. 点击「测试连接」验证配置
 5. 点击「添加配置」保存
 
+> 🔐 **安全说明**：API Key 在后端使用 **AES-256-GCM** 加密保存到 `server/config.json`
+> 的 `encryptedKeys` 字段；主密钥在首次启动时随机生成到 `server/.master.key`（与
+> `server/config.json` 一样在 `.gitignore` 中）。**请勿将 `.master.key` 提交到仓库
+> 或上传到云端**，否则密文可被解密。如需更换主密钥，删除 `.master.key` 后重启即可，
+> 已有密文将无法恢复（需重新填写 apiKey）。
+
 **内置 AI 服务（示例）：**
 
 | Provider | Base URL | 模型 |
@@ -180,7 +186,8 @@ novelbuilder/
 │   └── icons.svg
 ├── server/                      # Express 后端服务
 │   ├── index.js                 # 入口文件（中间件、路由注册）
-│   ├── config.json              # AI 配置存储
+│   ├── config.json              # AI 配置存储（apiKey 已加密为密文）
+│   ├── .master.key              # 本地主密钥（首次启动自动生成，已被 .gitignore）
 │   ├── logs/                    # 运行日志
 │   ├── routes/                  # API 路由
 │   │   ├── config.js            # 配置管理路由（CRUD、测试连接）
@@ -188,6 +195,7 @@ novelbuilder/
 │   └── utils/                   # 后端工具模块
 │       ├── aiClient.js          # AI API 客户端（OpenAI/Anthropic 适配）
 │       ├── configStore.js       # 配置存储管理
+│       ├── cryptoStore.js       # AES-256-GCM 加密层（保护 apiKey）
 │       ├── contentParser.js     # 小说内容解析
 │       ├── helpers.js           # 工具函数（中文数字转换）
 │       └── logger.js            # 日志系统
@@ -332,9 +340,9 @@ novelbuilder/
 | 数据持久化 | 100% | ✅ |
 | 书籍导出 | 100% | ✅ |
 | AI API 配置 | 100% | ✅ |
-| AI 书籍生成 | 80% | 🔜 开发中 |
-| 追加生成 | 80% | 🔜 开发中 |
-| **整体进度** | **85%** | 🚧 |
+| AI 书籍生成 | 95% | ✅ 已实现，待联调验收 |
+| 追加生成 | 90% | ✅ 已实现，待联调验收 |
+| **整体进度** | **92%** | 🚧 |
 
 ## 🤝 参与贡献
 

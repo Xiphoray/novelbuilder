@@ -9,7 +9,14 @@ import { useBookStore } from '@/stores/bookStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { db } from '@/services/db';
 import type { Book, Chapter } from '@/types';
-import { generateNovelStream, generateNovel, generateSummary } from '@/services/aiService';
+import { generateNovelStream, generateSummary } from '@/services/aiService';
+import {
+  addGenerationHistoryEntry,
+  buildInitialPrompt,
+  resolveModel,
+  resolveProvider,
+  truncateError,
+} from '@/services/generationHistory';
 
 interface UseGenerateNovelReturn {
   generating: boolean;
@@ -67,7 +74,8 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
     }, 1000);
 
     try {
-      let result: Awaited<ReturnType<typeof generateNovel>> | undefined;
+      let streamResult: import('@/services/aiTypes').GenerateResponse | undefined;
+      const initialPrompt = buildInitialPrompt(styleText, customPrompt);
 
       // 流式生成
       setProgress('AI 正在创作中，内容将实时展示...');
@@ -76,18 +84,18 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
         {
           onStart: () => setProgress('AI 已收到请求，开始创作...'),
           onDelta: (_content, accumulated) => setStreamContent(accumulated),
-          onDone: (data) => { result = data; },
+          onDone: (data) => { streamResult = data; },
           onError: (msg) => { throw new Error(msg); },
         },
       );
 
-      if (!result) throw new Error('生成失败：未收到结果');
+      if (!streamResult) throw new Error('生成失败：未收到结果');
 
       setProgress('正在保存到本地数据库...');
 
       const bookId = uuidv4();
       const now = Date.now();
-      const chapterEntities: Chapter[] = result.chapters.map((ch) => ({
+      const chapterEntities: Chapter[] = streamResult.chapters.map((ch) => ({
         id: uuidv4(),
         bookId,
         index: ch.index,
@@ -100,11 +108,11 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
 
       const book: Book = {
         id: bookId,
-        title: result.title,
+        title: streamResult.title,
         type: 'ai',
-        chapterCount: result.chapters.length,
+        chapterCount: streamResult.chapters.length,
         totalWordCount: chapterEntities.reduce((s, c) => s + c.wordCount, 0),
-        summary: result.summary || fullPrompt,
+        summary: streamResult.summary || fullPrompt,
         readingProgress: { chapterIndex: 0, scrollOffset: 0 },
         createdAt: now,
         updatedAt: now,
@@ -118,14 +126,25 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
       };
 
       await addBook(book, chapterEntities);
+      await addGenerationHistoryEntry({
+        bookId,
+        type: 'initial',
+        prompt: initialPrompt,
+        success: true,
+        model: resolveModel(streamResult.metadata, activeAIConfig.modelId),
+        provider: resolveProvider(streamResult.metadata, activeAIConfig.provider),
+        tokenUsage: streamResult.usage,
+        timestamp: now,
+      });
       await openBook(bookId);
 
       // 异步压缩概括
       (async () => {
+        const summaryPrompt = `书名：${streamResult.title}\n章节数：${streamResult.chapters.length}`;
         try {
           const summaryResult = await generateSummary({
-            bookTitle: result!.title,
-            chapters: result!.chapters,
+            bookTitle: streamResult.title,
+            chapters: streamResult.chapters,
           });
           const bookInDb = await db.books.get(bookId);
           if (bookInDb) {
@@ -137,16 +156,43 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
               });
             }
           }
-        } catch {
-          // 忽略摘要更新失败
+
+          await addGenerationHistoryEntry({
+            bookId,
+            type: 'summary',
+            prompt: summaryPrompt,
+            success: true,
+            model: resolveModel(summaryResult.metadata, activeAIConfig.modelId),
+            provider: resolveProvider(summaryResult.metadata, activeAIConfig.provider),
+            tokenUsage: summaryResult.usage,
+          });
+        } catch (summaryError) {
+          await addGenerationHistoryEntry({
+            bookId,
+            type: 'summary',
+            prompt: summaryPrompt,
+            success: false,
+            model: activeAIConfig.modelId,
+            provider: activeAIConfig.provider,
+            error: truncateError(summaryError),
+          });
         }
       })();
 
-      message.success(`《${result.title}》生成完毕，共 ${result.chapters.length} 章`);
+      message.success(`《${streamResult.title}》生成完毕，共 ${streamResult.chapters.length} 章`);
       resetForm();
       onClose();
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : '生成失败，请重试';
+      await addGenerationHistoryEntry({
+        bookId: `failed:${Date.now()}`,
+        type: 'initial',
+        prompt: buildInitialPrompt(styleText, customPrompt),
+        success: false,
+        model: activeAIConfig.modelId,
+        provider: activeAIConfig.provider,
+        error: truncateError(errorMsg),
+      });
       message.error(errorMsg);
     } finally {
       clearInterval(timer);

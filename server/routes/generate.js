@@ -157,6 +157,29 @@ function getActiveConfig(configStore, providerId) {
   return configStore.providers.find(p => p.id === activeId);
 }
 
+function normalizeUsage(usage) {
+  if (!usage) return undefined;
+
+  const promptTokens = usage.prompt_tokens ?? usage.input_tokens ?? 0;
+  const completionTokens = usage.completion_tokens ?? usage.output_tokens ?? 0;
+  const totalTokens = usage.total_tokens ?? (promptTokens + completionTokens);
+
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens,
+  };
+}
+
+function getGenerationMetadata(config, durationMs) {
+  return {
+    providerId: config.id,
+    provider: config.provider,
+    modelId: config.modelId,
+    durationMs,
+  };
+}
+
 // ============ F-005: AI 书籍生成（SSE 流式） ============
 router.post('/api/generate/stream', async (req, res) => {
   const { style, userPrompt, providerId } = req.body;
@@ -180,6 +203,7 @@ router.post('/api/generate/stream', async (req, res) => {
   res.writeHead(200, getSSEHeaders());
   
   try {
+    const startTime = Date.now();
     const messages = [
       { role: 'system', content: PROMPTS.generate.system },
       { role: 'user', content: PROMPTS.generate.user(styleText, userPrompt) },
@@ -227,7 +251,12 @@ router.post('/api/generate/stream', async (req, res) => {
     
     res.write(`data: ${JSON.stringify({
       type: 'done',
-      data: { title: bookTitle, chapters: formatChapters(chapters), summary: fullPrompt },
+      data: {
+        title: bookTitle,
+        chapters: formatChapters(chapters),
+        summary: fullPrompt,
+        metadata: getGenerationMetadata(config, Date.now() - startTime),
+      },
     })}\n\n`);
     res.end();
   } catch (error) {
@@ -258,6 +287,7 @@ router.post('/api/generate', async (req, res) => {
   });
   
   try {
+    const startTime = Date.now();
     const messages = [
       { role: 'system', content: PROMPTS.generate.system },
       { role: 'user', content: PROMPTS.generate.user(styleText, userPrompt) },
@@ -272,7 +302,13 @@ router.post('/api/generate', async (req, res) => {
     
     res.json({
       code: 0, message: 'success',
-      data: { title: bookTitle, chapters: formatChapters(chapters), summary: fullPrompt, usage },
+      data: {
+        title: bookTitle,
+        chapters: formatChapters(chapters),
+        summary: fullPrompt,
+        usage: normalizeUsage(usage),
+        metadata: getGenerationMetadata(config, Date.now() - startTime),
+      },
     });
   } catch (error) {
     log('ERROR', 'AI generation failed', { error: error.message });
@@ -297,6 +333,7 @@ router.post('/api/generate/append/stream', async (req, res) => {
   res.writeHead(200, getSSEHeaders());
   
   try {
+    const startTime = Date.now();
     const nextIndex = currentChapterCount + 1;
     const recentContent = (recentChapters || []).map(ch => `${ch.title}\n${ch.content}`).join('\n\n');
     
@@ -350,7 +387,10 @@ router.post('/api/generate/append/stream', async (req, res) => {
     
     res.write(`data: ${JSON.stringify({
       type: 'done',
-      data: { chapters: formatChapters(normalizedChapters, nextIndex) },
+      data: {
+        chapters: formatChapters(normalizedChapters, nextIndex),
+        metadata: getGenerationMetadata(config, Date.now() - startTime),
+      },
     })}\n\n`);
     res.end();
   } catch (error) {
@@ -373,6 +413,7 @@ router.post('/api/generate/append', async (req, res) => {
   log('INFO', '=== AI Append Generation Started ===', { bookId, currentChapterCount });
   
   try {
+    const startTime = Date.now();
     const nextIndex = currentChapterCount + 1;
     const recentContent = (recentChapters || []).map(ch => `${ch.title}\n${ch.content}`).join('\n\n');
     
@@ -395,7 +436,11 @@ router.post('/api/generate/append', async (req, res) => {
     
     res.json({
       code: 0, message: 'success',
-      data: { chapters: formatChapters(normalizedChapters, nextIndex), usage },
+      data: {
+        chapters: formatChapters(normalizedChapters, nextIndex),
+        usage: normalizeUsage(usage),
+        metadata: getGenerationMetadata(config, Date.now() - startTime),
+      },
     });
   } catch (error) {
     log('ERROR', 'AI append failed', { error: error.message });
@@ -416,6 +461,7 @@ router.post('/api/generate/summary', async (req, res) => {
   log('INFO', '=== AI Summary Generation Started ===', { bookTitle, chapterCount: chapters?.length });
   
   try {
+    const startTime = Date.now();
     const chaptersContent = (chapters || []).map(ch => `${ch.title}\n${ch.content}`).join('\n\n');
     
     const messages = [
@@ -428,7 +474,15 @@ router.post('/api/generate/summary', async (req, res) => {
     });
     
     log('INFO', '=== AI Summary Generation Completed ===', { summaryLength: content.length });
-    res.json({ code: 0, message: 'success', data: { summary: content, usage } });
+    res.json({
+      code: 0,
+      message: 'success',
+      data: {
+        summary: content,
+        usage: normalizeUsage(usage),
+        metadata: getGenerationMetadata(config, Date.now() - startTime),
+      },
+    });
   } catch (error) {
     log('ERROR', 'AI summary failed', { error: error.message });
     res.json({ code: 50001, message: `摘要生成失败: ${error.message}`, data: null });

@@ -3,6 +3,7 @@
  */
 
 import { Form, Slider, Select, Radio, Button, Card, Space, Typography, Tag } from 'antd';
+import type { FormInstance } from 'antd';
 import { ThunderboltOutlined, SaveOutlined } from '@ant-design/icons';
 import type { ThemeType, ReadingSettings } from '@/types';
 
@@ -69,7 +70,7 @@ export function ReadingPresets({ readingSettings, applyPreset }: ReadingPresetsP
 }
 
 interface ReadingSettingsFormProps {
-  form: any;
+  form: FormInstance<ReadingSettings>;
   onSave: () => void;
 }
 

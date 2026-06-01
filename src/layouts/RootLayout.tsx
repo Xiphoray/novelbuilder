@@ -153,6 +153,7 @@ export default function RootLayout() {
           onToggle={() => setSidebarVisible(!sidebarVisible)}
           theme={currentTheme}
           onCreateAI={() => setCreateAIOpen(true)}
+          onOpenHistory={() => navigate('/history')}
           onOpenSettings={() => navigate('/settings')}
         />
         <CreateAIDialog open={createAIOpen} onClose={() => setCreateAIOpen(false)} />

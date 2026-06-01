@@ -19,6 +19,12 @@ export interface ReadingProgress {
   scrollOffset: number;
 }
 
+/** 可用于摘要和提示词拼接的章节内容 */
+export interface ChapterContent {
+  title: string;
+  content: string;
+}
+
 /** AI配置信息 */
 export interface AIBookConfig {
   providerId: string;
@@ -60,6 +66,7 @@ export interface AIProviderConfig {
   name: string;
   provider: AIProviderType;
   baseUrl: string;
+  apiKey?: string;
   modelId: string;
   isActive: boolean;
 }

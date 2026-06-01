@@ -9,29 +9,25 @@ function logInfo(message: string, data?: unknown) {
   console.log(`[AI Service] ${message}`, data ?? '');
 }
 
-/**
- * F-005: AI 流式生成小说（SSE）
- */
 export async function generateNovelStream(
   request: GenerateRequest,
   callbacks: StreamCallbacks,
+  options?: { signal?: AbortSignal },
 ): Promise<void> {
   logInfo('=== 开始流式生成小说 ===', { style: request.style, userPrompt: request.userPrompt });
-  await readSSE('/generate/stream', request, callbacks);
+  await readSSE('/generate/stream', request, callbacks, options);
   logInfo('=== 流式生成结束 ===');
 }
 
-/**
- * F-006: 流式追加生成
- */
 export async function appendChaptersStream(
   request: AppendRequest,
   callbacks: StreamCallbacks,
+  options?: { signal?: AbortSignal },
 ): Promise<void> {
   logInfo('=== 开始流式追加生成 ===', {
     bookId: request.bookId,
     currentChapterCount: request.currentChapterCount,
   });
-  await readSSE('/generate/append/stream', request, callbacks);
+  await readSSE('/generate/append/stream', request, callbacks, options);
   logInfo('=== 流式追加生成结束 ===');
 }

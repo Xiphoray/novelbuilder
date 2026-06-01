@@ -7,7 +7,7 @@
 | 属性 | 值 |
 |------|-----|
 | 文档编号 | PRD-NOVELBUILDER-001 |
-| 版本 | v2.3 |
+| 版本 | v2.4 |
 | 最后更新 | 2026-06-01 |
 | 文档状态 | ✅ 开发进行中 |
 | 产品负责人 | [待填写] |
@@ -24,7 +24,8 @@
 | v2.0 | 2026-05-28 | - | 按阿里巴巴规范重构，补充接口、验收标准、异常处理 | ❌ 已废弃 |
 | v2.1 | 2026-05-29 | - | 补充开发进度、已完成功能、技术实现细节 | ❌ 已废弃 |
 | v2.2 | 2026-05-30 | - | 新增一键启动脚本（start.bat / start.sh），更新项目结构说明 | ❌ 已废弃 |
-| v2.3 | 2026-06-01 | - | 更新 AI 追加生成闭环：打开最后一章即自动续写；后端强制每轮返回两章；补充联调结果与开发记录 | ✅ 当前版本 |
+| v2.3 | 2026-06-01 | - | 更新 AI 追加生成闭环：打开最后一章即自动续写；后端强制每轮返回两章；补充联调结果与开发记录 | ❌ 已废弃 |
+| v2.4 | 2026-06-01 | - | 新增生成历史页面、侧边栏历史入口、摘要成功记录补齐与统计链路完善 | ✅ 当前版本 |
 
 ### 文档约定
 
@@ -1383,6 +1384,8 @@ src/
 ├── layouts/
 │   └── RootLayout.tsx          # 根布局（侧边栏 + 阅读区）
 ├── pages/
+│   ├── HistoryPage/            # 生成历史页
+│   │   └── index.tsx
 │   ├── ReaderPage/             # 阅读器模块（拆分后）
 │   │   ├── index.tsx           # 主页面组件
 │   │   ├── components/         # 阅读器子组件
@@ -1417,6 +1420,7 @@ src/
 │   ├── backupUtils.ts          # 备份工具函数
 │   ├── db.ts                   # IndexedDB 数据库实例（Dexie.js）
 │   ├── exportService.ts        # 书籍导出服务
+│   ├── generationHistory.ts    # 生成历史记录与 Prompt 辅助
 │   ├── importEncoding.ts       # 编码检测
 │   ├── importService.ts        # 导入服务入口
 │   ├── importSplitter.ts       # 章节分割
@@ -1757,3 +1761,49 @@ src/
 6. 自动压缩梗概
 7. 用户继续打开新的最后一章
 8. 持续循环
+
+### 11.11 本次开发记录（2026-06-01 补充）
+
+#### 本次完成内容
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| 生成历史页面 | ✅ 完成 | 新增 `/history` 页面，支持查看 AI 首次生成、续写、摘要三类记录 |
+| 历史筛选与导出 | ✅ 完成 | 支持按书籍 / 类型 / 状态筛选，支持导出当前筛选结果 JSON |
+| 历史统计面板 | ✅ 完成 | 展示记录总数、成功次数、失败次数、成功率、总 Tokens、Provider 数 |
+| 侧边栏历史入口 | ✅ 完成 | 书库头部新增历史按钮，支持快速跳转到历史页 |
+| 摘要成功记录补齐 | ✅ 完成 | 首次生成后的摘要、续写后的摘要现在都会写入 `generationHistory` |
+| 摘要失败记录补齐 | ✅ 完成 | 续写后的摘要失败也会落库，便于定位问题 |
+| 响应式样式补充 | ✅ 完成 | 历史页已适配桌面与移动端布局 |
+
+#### 本次代码变更
+
+| 文件 | 变更说明 |
+|------|----------|
+| `src/pages/HistoryPage/index.tsx` | 新增生成历史页面，含统计、筛选、导出、清空功能 |
+| `src/routes/index.tsx` | 新增 `/history` 路由 |
+| `src/components/Sidebar/components/SidebarComponents.tsx` | 侧边栏头部新增历史入口按钮 |
+| `src/components/Sidebar/index.tsx` | 透传 `onOpenHistory` 回调 |
+| `src/layouts/RootLayout.tsx` | 将历史入口接入路由导航 |
+| `src/styles/global.css` | 新增 HistoryPage 样式与响应式适配 |
+| `src/components/CreateAIDialog/useGenerateNovel.ts` | 补齐首次生成后摘要成功历史记录 |
+| `src/pages/ReaderPage/hooks/useAppendGeneration.ts` | 补齐续写后摘要成功/失败历史记录 |
+
+#### 当前生成历史能力
+
+- 支持记录三类事件：
+  - `initial`：首次生成
+  - `append`：续写
+  - `summary`：摘要生成
+- 支持记录如下信息：
+  - prompt
+  - provider
+  - model
+  - tokenUsage
+  - success / error
+  - timestamp
+- 支持从历史页快速观察：
+  - 最近失败请求
+  - Provider 使用分布
+  - 各类请求成功率
+  - Token 总消耗

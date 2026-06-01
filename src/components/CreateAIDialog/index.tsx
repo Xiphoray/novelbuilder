@@ -3,8 +3,10 @@
  */
 
 import { useState } from 'react';
-import { Modal, Input, Space, Typography, Spin } from 'antd';
-import { RobotOutlined } from '@ant-design/icons';
+import { App, Modal, Input, Space, Typography, Spin, Alert } from 'antd';
+import { RobotOutlined, SettingOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import { useSettingsStore } from '@/stores/settingsStore';
 import { useGenerateNovel } from './useGenerateNovel';
 import { GenerateProgress, StyleTagSelector } from './GenerateProgress';
 
@@ -20,6 +22,11 @@ export default function CreateAIDialog({ open, onClose }: CreateAIDialogProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customPrompt, setCustomPrompt] = useState('');
 
+  const { modal } = App.useApp();
+  const navigate = useNavigate();
+  const activeAIConfig = useSettingsStore((s) => s.activeAIConfig);
+  const isAIConfigured = Boolean(activeAIConfig && activeAIConfig.apiKey);
+
   const { generating, progress, streamContent, elapsedTime, handleGenerate } = useGenerateNovel();
 
   const handleTagToggle = (tag: string) => {
@@ -32,7 +39,26 @@ export default function CreateAIDialog({ open, onClose }: CreateAIDialogProps) {
     return mins > 0 ? `${mins}分${secs}秒` : `${secs}秒`;
   };
 
+  const goToSettings = () => {
+    onClose();
+    navigate('/settings');
+  };
+
   const handleGenerateClick = async () => {
+    // 前置校验：未配置 AI 时弹窗询问用户去设置，并阻止 onOk 关闭
+    if (!isAIConfigured) {
+      modal.confirm({
+        title: '尚未配置 AI Provider',
+        content: '需要先在设置中填写 Provider 类型、API Key、模型 ID 等信息，才能开始 AI 生成。',
+        okText: '前往设置',
+        cancelText: '稍后',
+        onOk: () => {
+          goToSettings();
+        },
+      });
+      return false;
+    }
+
     await handleGenerate(
       selectedTags,
       customPrompt,
@@ -42,6 +68,7 @@ export default function CreateAIDialog({ open, onClose }: CreateAIDialogProps) {
         setCustomPrompt('');
       },
     );
+    return true;
   };
 
   return (
@@ -70,6 +97,20 @@ export default function CreateAIDialog({ open, onClose }: CreateAIDialogProps) {
     >
       <Spin spinning={generating} tip={null}>
         <div style={{ minHeight: 200 }}>
+          {!isAIConfigured && (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginBottom: 16 }}
+              message="尚未配置 AI Provider"
+              description="点击「开始生成」将引导你前往设置页填写 Provider 与 API Key。"
+              action={
+                <Space>
+                  <SettingOutlined onClick={goToSettings} style={{ cursor: 'pointer' }} />
+                </Space>
+              }
+            />
+          )}
           <div style={{ marginBottom: 16 }}>
             <Text strong>选择风格类型：</Text>
             <div style={{ marginTop: 8 }}>

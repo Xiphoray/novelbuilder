@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.5",
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "antd": "^5.29.3",
     "cors": "^2.8.6",
     "dexie": "^4.4.3",

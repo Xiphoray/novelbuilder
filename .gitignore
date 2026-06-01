@@ -15,7 +15,9 @@ dist-ssr
 # Server
 server/logs/
 server/config.json
+server/.master.key
 server/.env
+server/migrate-secrets.mjs
 
 # Test scripts
 create_test.cjs

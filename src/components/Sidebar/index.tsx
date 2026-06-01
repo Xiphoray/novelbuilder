@@ -16,10 +16,11 @@ interface SidebarProps {
   onToggle: () => void;
   theme: 'light' | 'dark' | 'eye-care';
   onCreateAI: () => void;
+  onOpenHistory: () => void;
   onOpenSettings: () => void;
 }
 
-export default function Sidebar({ visible, onToggle, theme, onCreateAI, onOpenSettings }: SidebarProps) {
+export default function Sidebar({ visible, onToggle, theme, onCreateAI, onOpenHistory, onOpenSettings }: SidebarProps) {
   const books = useBookStore((s) => s.books);
   const currentBook = useBookStore((s) => s.currentBook);
   const storeTheme = useSettingsStore((s) => s.readingSettings.theme);
@@ -46,7 +47,7 @@ export default function Sidebar({ visible, onToggle, theme, onCreateAI, onOpenSe
         <Button type="text" size="small" icon={<span style={{ fontSize: 16 }}>‹</span>} onClick={onToggle} style={{ position: 'absolute', right: 4, top: 12, zIndex: 10, opacity: 0.5 }} title="收起书库" />
 
         <div style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.2s ease', pointerEvents: visible ? 'auto' : 'none' }}>
-          <SidebarHeader booksCount={books.length} importing={importing} onImport={handleImportTxt} onCreateAI={onCreateAI} onOpenSettings={onOpenSettings} />
+          <SidebarHeader booksCount={books.length} importing={importing} onImport={handleImportTxt} onCreateAI={onCreateAI} onOpenHistory={onOpenHistory} onOpenSettings={onOpenSettings} />
           <SidebarFilters search={search} onSearchChange={setSearch} sort={sort} onSortChange={setSort} filter={filter} onFilterChange={setFilter} />
         </div>
 

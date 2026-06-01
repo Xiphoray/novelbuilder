@@ -4,14 +4,39 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { App } from 'antd';
+import type { FormInstance } from 'antd';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { AIProviderConfig } from '@/types';
-import { saveServerConfig, testConnection, getServerConfig } from '@/services/aiService';
+import {
+  saveServerConfig,
+  testConnection,
+  getServerConfig,
+  healthCheck,
+  setActiveServerConfig,
+} from '@/services/aiConfig';
 import { v4 as uuidv4 } from 'uuid';
 
 interface ModelInfo {
   maxTokens?: number;
   contextLength?: number;
+}
+
+function formatConnectionErrorMessage(result: {
+  error?: string;
+  errorType?: string;
+  suggestion?: string;
+  testedEndpoint?: string;
+  status?: number;
+}) {
+  const parts = [
+    result.errorType ? `类型：${result.errorType}` : '',
+    typeof result.status === 'number' ? `状态码：${result.status}` : '',
+    result.error ? `错误：${result.error}` : '错误：未知错误',
+    result.suggestion ? `建议：${result.suggestion}` : '',
+    result.testedEndpoint ? `接口：${result.testedEndpoint}` : '',
+  ].filter(Boolean);
+
+  return parts.join(' | ');
 }
 
 export function useAIConfig() {
@@ -22,22 +47,46 @@ export function useAIConfig() {
   const [modelInfoMap, setModelInfoMap] = useState<Record<string, ModelInfo>>({});
 
   useEffect(() => {
-    import('@/services/aiService').then(({ healthCheck }) => healthCheck()).then((online) => setBackendOnline(online));
+    healthCheck().then((online) => setBackendOnline(online));
   }, []);
 
   useEffect(() => {
-    getServerConfig().then((result) => {
-      if (result.providers) {
+    (async () => {
+      try {
+        const result = await getServerConfig();
+        if (!result.providers) return;
         const infoMap: Record<string, ModelInfo> = {};
+        const { aiConfigs: existing } = useSettingsStore.getState();
+        const existingById = new Map(existing.map((c) => [c.id, c]));
+
         for (const p of result.providers) {
-          if (p.id && (p.maxTokens || p.contextLength)) {
+          if (!p.id) continue;
+          if (p.maxTokens || p.contextLength) {
             infoMap[p.id] = { maxTokens: p.maxTokens, contextLength: p.contextLength };
+          }
+          // 同步后端 provider 到本地 store：后端是事实来源，丢失的本地记录以空 apiKey 占位
+          const prev = existingById.get(p.id);
+          const synced: AIProviderConfig = {
+            id: p.id,
+            name: p.name || prev?.name || `${p.provider} - ${p.modelId}`,
+            provider: p.provider as AIProviderConfig['provider'],
+            baseUrl: p.baseUrl,
+            apiKey: prev?.apiKey || '',
+            modelId: p.modelId,
+            isActive: p.isActive || prev?.isActive || false,
+          };
+          if (prev) {
+            await updateAIConfig(synced);
+          } else {
+            await addAIConfig(synced);
           }
         }
         setModelInfoMap(infoMap);
+      } catch {
+        // 静默失败：保持本地状态
       }
-    }).catch(() => {});
-  }, []);
+    })();
+  }, [addAIConfig, updateAIConfig]);
 
   const syncConfigToServer = useCallback(async (config: AIProviderConfig) => {
     try {
@@ -46,7 +95,7 @@ export function useAIConfig() {
         name: config.name,
         provider: config.provider,
         baseUrl: config.baseUrl,
-        apiKey: (config as unknown as { apiKey?: string }).apiKey || '',
+        apiKey: config.apiKey || '',
         modelId: config.modelId,
       });
       if (result.maxTokens || result.contextLength) {
@@ -60,7 +109,7 @@ export function useAIConfig() {
     }
   }, []);
 
-  const handleSave = async (form: any) => {
+  const handleSave = async (form: FormInstance<AIProviderConfig>) => {
     try {
       const values = await form.validateFields();
       if (editingId) {
@@ -81,12 +130,12 @@ export function useAIConfig() {
     }
   };
 
-  const handleEdit = (config: AIProviderConfig, form: any) => {
+  const handleEdit = (config: AIProviderConfig, form: FormInstance<AIProviderConfig>) => {
     setEditingId(config.id);
     form.setFieldsValue(config);
   };
 
-  const handleDelete = async (id: string, form: any) => {
+  const handleDelete = async (id: string, form: FormInstance<AIProviderConfig>) => {
     await deleteAIConfig(id);
     setModelInfoMap((prev) => { const next = { ...prev }; delete next[id]; return next; });
     if (editingId === id) { setEditingId(null); form.resetFields(); }
@@ -95,7 +144,6 @@ export function useAIConfig() {
 
   const handleSetActive = async (config: AIProviderConfig) => {
     try {
-      const { setActiveServerConfig } = await import('@/services/aiService');
       await setActiveServerConfig(config.id);
       const { aiConfigs: configs } = useSettingsStore.getState();
       for (const c of configs) {
@@ -108,11 +156,10 @@ export function useAIConfig() {
     }
   };
 
-  const handleTestConnection = async (form: any) => {
+  const handleTestConnection = async (form: FormInstance<AIProviderConfig>) => {
     try {
       const values = form.getFieldsValue();
-      const { baseUrl, provider, modelId } = values as AIProviderConfig;
-      const apiKey = (values as { apiKey?: string }).apiKey;
+      const { baseUrl, provider, modelId, apiKey } = values;
       if (!baseUrl || !provider || !apiKey) {
         message.error('请填写 API Base URL、Provider 类型和 API Key');
         return;
@@ -124,12 +171,18 @@ export function useAIConfig() {
         const modelInfo = result.models?.length
           ? `，可用模型 ${result.models.length} 个：${result.models.slice(0, 5).join(', ')}${result.models.length > 5 ? '...' : ''}`
           : '';
-        message.success({ content: `✅ 连接成功！${modelInfo}`, key: loadingKey, duration: 8 });
+        const endpointInfo = result.testedEndpoint ? `，测试接口：${result.testedEndpoint}` : '';
+        message.success({ content: `✅ 连接成功！${modelInfo}${endpointInfo}`, key: loadingKey, duration: 8 });
       } else {
-        message.error({ content: `连接失败：${result.error || '未知错误'}`, key: loadingKey, duration: 5 });
+        message.error({
+          content: `连接失败：${formatConnectionErrorMessage(result)}`,
+          key: loadingKey,
+          duration: 8,
+        });
       }
-    } catch {
-      message.error({ content: '连接测试出错', key: 'test' });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : '连接测试出错';
+      message.error({ content: msg, key: 'test', duration: 5 });
     }
   };
 

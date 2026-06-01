@@ -3,23 +3,24 @@
  */
 
 import { Form, Input, Select, Button, Space, Card, Divider, Typography, Tag, Radio } from 'antd';
+import type { FormInstance } from 'antd';
 import { ApiOutlined, SaveOutlined } from '@ant-design/icons';
 import type { AIProviderConfig, AIProviderType } from '@/types';
 
 const { Text } = Typography;
 
 interface AIConfigSectionProps {
-  form: any;
+  form: FormInstance<AIProviderConfig>;
   aiConfigs: AIProviderConfig[];
   editingId: string | null;
   backendOnline: boolean;
   modelInfoMap: Record<string, { maxTokens?: number; contextLength?: number }>;
   setEditingId: (id: string | null) => void;
-  onSave: (form: any) => void;
-  onEdit: (config: AIProviderConfig, form: any) => void;
-  onDelete: (id: string, form: any) => void;
+  onSave: (form: FormInstance<AIProviderConfig>) => void;
+  onEdit: (config: AIProviderConfig, form: FormInstance<AIProviderConfig>) => void;
+  onDelete: (id: string, form: FormInstance<AIProviderConfig>) => void;
   onSetActive: (config: AIProviderConfig) => void;
-  onTest: (form: any) => void;
+  onTest: (form: FormInstance<AIProviderConfig>) => void;
 }
 
 const providerOptions = [

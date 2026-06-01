@@ -14,7 +14,15 @@ const { Title, Paragraph, Text } = Typography;
 
 export default function ReaderPage() {
   const reader = useReaderState();
-  const { handleAppend } = useAppendGeneration(reader);
+  const {
+    handleAppend,
+    cancelAppend,
+    retryAppend,
+    appendPreview,
+    appendStatus,
+    appendError,
+    canRetry,
+  } = useAppendGeneration(reader);
   useKeyboardNav(reader);
 
   const {
@@ -31,7 +39,7 @@ export default function ReaderPage() {
 
   if (!currentBook) {
     return (
-      <div className={themeClass} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', flexDirection: 'column', gap: 16 }}>
+      <div className={`${themeClass} reader-page reader-page--empty`} style={{ height: '100%' }}>
         <Empty description={null} />
         <Text type="secondary" style={{ fontSize: 16 }}>📖 请从书库中选择一本书</Text>
       </div>
@@ -41,9 +49,17 @@ export default function ReaderPage() {
   const currentChapter = currentChapters[currentChapterIndex];
 
   return (
-    <div ref={scrollContainerRef} className={themeClass} style={{ height: '100%', overflow: 'auto', transition: 'background-color 0.3s, color 0.3s' }}>
-      <div style={{ maxWidth: readingSettings.contentWidth, margin: '0 auto', padding: '24px 48px', fontFamily: readingSettings.fontFamily, fontSize: readingSettings.fontSize, lineHeight: readingSettings.lineHeight, minHeight: '100%' }}>
-        <Title level={3} style={{ textAlign: 'center', marginBottom: 8, transition: 'color 0.3s' }}>{currentBook.title}</Title>
+    <div ref={scrollContainerRef} className={`${themeClass} reader-page`} style={{ height: '100%', overflow: 'auto', transition: 'background-color 0.3s, color 0.3s' }}>
+      <div
+        className="reader-page__content"
+        style={{
+          maxWidth: readingSettings.contentWidth,
+          fontFamily: readingSettings.fontFamily,
+          fontSize: readingSettings.fontSize,
+          lineHeight: readingSettings.lineHeight,
+        }}
+      >
+        <Title level={3} className="reader-page__book-title" style={{ transition: 'color 0.3s' }}>{currentBook.title}</Title>
 
         <ProgressBar
           currentIndex={currentChapterIndex} totalChapters={currentChapters.length}
@@ -56,19 +72,30 @@ export default function ReaderPage() {
         />
 
         {currentChapter ? (
-          <div>
-            <Title level={4} style={{ marginBottom: 24, transition: 'color 0.3s' }}>{currentChapter.title}</Title>
+          <div className="reader-page__chapter">
+            <Title level={4} className="reader-page__chapter-title" style={{ transition: 'color 0.3s' }}>{currentChapter.title}</Title>
             {currentChapter.content.split(/\n/).map((para, i) => (
-              <Paragraph key={i} style={{ textIndent: '2em', marginBottom: '0.8em', transition: 'color 0.3s' }}>{para}</Paragraph>
+              <Paragraph key={i} className="reader-page__paragraph" style={{ transition: 'color 0.3s' }}>{para}</Paragraph>
             ))}
           </div>
         ) : <Empty description="章节加载失败" />}
 
         <AppendSection
-          book={currentBook} appendLoading={appendLoading} appendProgress={appendProgress}
-          appendElapsed={appendElapsed} canAppend={canAppend}
-          currentChapterIndex={currentChapterIndex} totalChapters={currentChapters.length}
-          formatTime={formatTime} onAppend={handleAppend}
+          book={currentBook}
+          appendLoading={appendLoading}
+          appendProgress={appendProgress}
+          appendElapsed={appendElapsed}
+          canAppend={canAppend}
+          currentChapterIndex={currentChapterIndex}
+          totalChapters={currentChapters.length}
+          formatTime={formatTime}
+          onAppend={() => { void handleAppend(); }}
+          onCancelAppend={cancelAppend}
+          onRetryAppend={() => { void retryAppend(); }}
+          appendPreview={appendPreview}
+          appendStatus={appendStatus}
+          appendError={appendError}
+          canRetry={canRetry}
         />
 
         <BottomNav
@@ -82,8 +109,11 @@ export default function ReaderPage() {
         onJump={handleTOCJump} onClose={() => setTocOpen(false)}
       />
 
-      <FloatButton icon={<ToTopOutlined />} onClick={handleBackToTop}
-        style={{ position: 'fixed', right: 24, bottom: 80, opacity: showBackTop ? 1 : 0, pointerEvents: showBackTop ? 'auto' : 'none', transition: 'opacity 0.3s' }}
+      <FloatButton
+        className="reader-page__backtop"
+        icon={<ToTopOutlined />}
+        onClick={handleBackToTop}
+        style={{ opacity: showBackTop ? 1 : 0, pointerEvents: showBackTop ? 'auto' : 'none', transition: 'opacity 0.3s' }}
       />
     </div>
   );

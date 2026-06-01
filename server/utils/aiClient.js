@@ -1,4 +1,5 @@
 import { log } from './logger.js';
+import { withApiKey } from './configStore.js';
 
 /**
  * 构建 OpenAI 格式请求
@@ -130,6 +131,8 @@ export function calcMaxOutputTokens(modelInfo, defaultVal = 16000) {
  * 调用 AI API（支持 OpenAI / Anthropic / OpenAI Compatible）
  */
 export async function callAI(config, messages, options = {}) {
+  // 补全 apiKey：调用方传了明文则直接用，否则按 id 从加密层解密
+  config = withApiKey(config);
   let request;
   
   if (config.provider === 'anthropic') {
@@ -192,6 +195,8 @@ export async function callAI(config, messages, options = {}) {
  * 调用 AI API - 流式模式（SSE）
  */
 export async function callAIStream(config, messages, options = {}) {
+  // 补全 apiKey：调用方传了明文则直接用，否则按 id 从加密层解密
+  config = withApiKey(config);
   let request;
   
   if (config.provider === 'anthropic') {

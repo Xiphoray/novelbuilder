@@ -2,10 +2,10 @@
  * 阅读器组件
  */
 
-import { Typography, Progress, Button, Drawer, Spin } from 'antd';
+import { Typography, Progress, Button, Drawer, Spin, Space, Alert } from 'antd';
 import {
   DownloadOutlined, ArrowLeftOutlined, ArrowRightOutlined,
-  MenuOutlined, PlusOutlined, LoadingOutlined,
+  MenuOutlined, PlusOutlined, LoadingOutlined, ReloadOutlined, StopOutlined,
 } from '@ant-design/icons';
 import type { Book } from '@/types';
 
@@ -48,7 +48,7 @@ export function ChapterNav({ chapters, currentIndex, onJump, contentWidth }: Cha
   }
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 24, flexWrap: 'wrap', maxWidth: contentWidth, margin: '0 auto 24px' }}>
+    <div className="reader-chapter-nav" style={{ maxWidth: contentWidth }}>
       {buttons}
     </div>
   );
@@ -66,10 +66,10 @@ interface ProgressBarProps {
 export function ProgressBar({ currentIndex, totalChapters, onDownload, onTOCOpen }: ProgressBarProps) {
   const percent = Math.round(((currentIndex + 1) / Math.max(totalChapters, 1)) * 100);
   return (
-    <div style={{ textAlign: 'center', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+    <div className="reader-progress-bar">
       <Button size="small" icon={<MenuOutlined />} onClick={onTOCOpen}>目录</Button>
-      <Text type="secondary">{totalChapters} 章 · 已读到第 {currentIndex + 1} 章</Text>
-      <Progress percent={percent} size="small" style={{ width: 120, margin: 0 }} />
+      <Text className="reader-progress-bar__text" type="secondary">{totalChapters} 章 · 已读到第 {currentIndex + 1} 章</Text>
+      <Progress className="reader-progress-bar__progress" percent={percent} size="small" style={{ margin: 0 }} />
       <Button size="small" icon={<DownloadOutlined />} onClick={onDownload}>下载</Button>
     </div>
   );
@@ -87,16 +87,38 @@ interface AppendSectionProps {
   totalChapters: number;
   formatTime: (s: number) => string;
   onAppend: () => void;
+  onCancelAppend: () => void;
+  onRetryAppend: () => void;
+  appendPreview: string;
+  appendStatus: 'idle' | 'generating' | 'error' | 'cancelled';
+  appendError: string;
+  canRetry: boolean;
 }
 
-export function AppendSection({ book, appendLoading, appendProgress, appendElapsed, canAppend, currentChapterIndex, totalChapters, formatTime, onAppend }: AppendSectionProps) {
+export function AppendSection({
+  book,
+  appendLoading,
+  appendProgress,
+  appendElapsed,
+  canAppend,
+  currentChapterIndex,
+  totalChapters,
+  formatTime,
+  onAppend,
+  onCancelAppend,
+  onRetryAppend,
+  appendPreview,
+  appendStatus,
+  appendError,
+  canRetry,
+}: AppendSectionProps) {
   if (book?.type !== 'ai' || !book.aiConfig) return null;
-  if (!appendLoading && !canAppend && currentChapterIndex < totalChapters - 1) return null;
+  if (!appendLoading && appendStatus === 'idle' && !canAppend && currentChapterIndex < totalChapters - 1) return null;
 
   return (
-    <div style={{ marginTop: 32, textAlign: 'center' }}>
-      {(appendLoading || canAppend) && (
-        <div style={{ padding: '24px 16px', borderTop: '1px dashed #d9d9d9' }}>
+    <div className="reader-append-section">
+      {(appendLoading || canAppend || appendStatus === 'error' || appendStatus === 'cancelled') && (
+        <div className="reader-append-section__inner">
           {appendLoading ? (
             <div>
               <Spin indicator={<LoadingOutlined spin />} />
@@ -105,7 +127,54 @@ export function AppendSection({ book, appendLoading, appendProgress, appendElaps
                 已等待 <span style={{ color: '#1677ff', fontWeight: 600 }}>{formatTime(appendElapsed)}</span>
                 {appendElapsed > 30 && <span> · 预计还需要 30-120 秒</span>}
               </div>
+              {appendPreview && (
+                <div className="reader-append-section__preview reader-append-section__preview--centered">
+                  <div style={{ marginBottom: 6, fontWeight: 600, color: '#333' }}>📝 续写预览</div>
+                  {appendPreview.slice(-600)}{appendPreview.length > 600 ? '...' : ''}
+                </div>
+              )}
+              <div style={{ marginTop: 12 }}>
+                <Button danger icon={<StopOutlined />} onClick={onCancelAppend}>
+                  停止续写
+                </Button>
+              </div>
             </div>
+          ) : appendStatus === 'error' ? (
+            <Space direction="vertical" size={12} className="reader-append-section__stack">
+              <Alert
+                type="error"
+                showIcon
+                message="续写失败"
+                description={appendError || 'AI 续写未完成，请稍后重试。'}
+              />
+              {appendPreview && (
+                <div className="reader-append-section__preview">
+                  <div style={{ marginBottom: 6, fontWeight: 600, color: '#333' }}>📝 上次续写预览</div>
+                  {appendPreview.slice(-600)}{appendPreview.length > 600 ? '...' : ''}
+                </div>
+              )}
+              <Space wrap className="reader-append-section__actions">
+                <Button type="primary" icon={<ReloadOutlined />} onClick={onRetryAppend} disabled={!canRetry}>
+                  重新续写
+                </Button>
+                <Button icon={<PlusOutlined />} onClick={onAppend}>
+                  重新准备上下文
+                </Button>
+              </Space>
+            </Space>
+          ) : appendStatus === 'cancelled' ? (
+            <Space direction="vertical" size={12}>
+              <Text type="secondary">已停止本次续写。</Text>
+              {appendPreview && (
+                <div className="reader-append-section__preview reader-append-section__preview--centered">
+                  <div style={{ marginBottom: 6, fontWeight: 600, color: '#333' }}>📝 已停止前的续写预览</div>
+                  {appendPreview.slice(-600)}{appendPreview.length > 600 ? '...' : ''}
+                </div>
+              )}
+              <Button type="primary" icon={<ReloadOutlined />} onClick={onRetryAppend} disabled={!canRetry}>
+                继续续写
+              </Button>
+            </Space>
           ) : canAppend ? (
             <div>
               <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>📖 已接近最新章节，是否继续？</Text>
@@ -114,8 +183,8 @@ export function AppendSection({ book, appendLoading, appendProgress, appendElaps
           ) : null}
         </div>
       )}
-      {!appendLoading && !canAppend && currentChapterIndex >= totalChapters - 1 && (
-        <div style={{ padding: '16px', color: '#999' }}>
+      {!appendLoading && appendStatus === 'idle' && !canAppend && currentChapterIndex >= totalChapters - 1 && (
+        <div className="reader-append-section__hint">
           <Text type="secondary">继续阅读以触发自动续写，或</Text>
           <Button type="link" size="small" icon={<PlusOutlined />} onClick={onAppend} style={{ padding: '0 4px' }}>手动续写</Button>
         </div>
@@ -167,9 +236,9 @@ interface BottomNavProps {
 
 export function BottomNav({ currentIndex, totalChapters, onPrev, onNext }: BottomNavProps) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, paddingTop: 24, borderTop: '1px solid var(--border-color, #e8e8e8)' }}>
+    <div className="reader-bottom-nav">
       <Button disabled={currentIndex <= 0} onClick={onPrev} icon={<ArrowLeftOutlined />}>上一章</Button>
-      <Text type="secondary" style={{ fontSize: 12 }}>← 上一章 · → 下一章 · PageUp/PageDown 翻页</Text>
+      <Text className="reader-bottom-nav__hint" type="secondary">← 上一章 · → 下一章 · PageUp/PageDown 翻页</Text>
       <Button disabled={currentIndex >= totalChapters - 1} onClick={onNext}>下一章<ArrowRightOutlined /></Button>
     </div>
   );

@@ -3,12 +3,14 @@
  */
 
 import { Typography, Input, List, Tag, Button, Select, Upload, Dropdown, Progress, Modal, Form } from 'antd';
+import type { FormInstance } from 'antd';
 import {
   SearchOutlined, PlusOutlined, UploadOutlined, BookOutlined,
   ClockCircleOutlined, EditOutlined, DeleteOutlined, MoreOutlined,
-  DownloadOutlined, SettingOutlined,
+  DownloadOutlined, SettingOutlined, HistoryOutlined,
 } from '@ant-design/icons';
 import type { Book } from '@/types';
+import type { FilterOption, SortOption } from '../hooks/useSidebarState';
 import { formatWordCount, formatRelativeTime } from '@/services/exportService';
 
 const { Title, Text } = Typography;
@@ -20,10 +22,11 @@ interface SidebarHeaderProps {
   importing: boolean;
   onImport: (file: File) => Promise<boolean> | boolean;
   onCreateAI: () => void;
+  onOpenHistory: () => void;
   onOpenSettings: () => void;
 }
 
-export function SidebarHeader({ booksCount, importing, onImport, onCreateAI, onOpenSettings }: SidebarHeaderProps) {
+export function SidebarHeader({ booksCount, importing, onImport, onCreateAI, onOpenHistory, onOpenSettings }: SidebarHeaderProps) {
   return (
     <div className="sidebar-header" style={{
       padding: '20px 20px 12px', background: 'var(--sidebar-header-bg, linear-gradient(135deg, #667eea 0%, #764ba2 100%))'
@@ -38,7 +41,10 @@ export function SidebarHeader({ booksCount, importing, onImport, onCreateAI, onO
             <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{booksCount} 本</Text>
           </div>
         </div>
-        <Button type="text" icon={<SettingOutlined style={{ color: 'rgba(255,255,255,0.8)' }} />} onClick={onOpenSettings} size="small" title="设置" style={{ padding: '4px 8px' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Button type="text" icon={<HistoryOutlined style={{ color: 'rgba(255,255,255,0.8)' }} />} onClick={onOpenHistory} size="small" title="生成历史" style={{ padding: '4px 8px' }} />
+          <Button type="text" icon={<SettingOutlined style={{ color: 'rgba(255,255,255,0.8)' }} />} onClick={onOpenSettings} size="small" title="设置" style={{ padding: '4px 8px' }} />
+        </div>
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <Upload accept=".txt" showUploadList={false} beforeUpload={onImport} disabled={importing} style={{ flex: 1 }}>
@@ -54,8 +60,8 @@ export function SidebarHeader({ booksCount, importing, onImport, onCreateAI, onO
 
 interface SidebarFiltersProps {
   search: string; onSearchChange: (v: string) => void;
-  sort: string; onSortChange: (v: any) => void;
-  filter: string; onFilterChange: (v: any) => void;
+  sort: SortOption; onSortChange: (v: SortOption) => void;
+  filter: FilterOption; onFilterChange: (v: FilterOption) => void;
 }
 
 export function SidebarFilters({ search, onSearchChange, sort, onSortChange, filter, onFilterChange }: SidebarFiltersProps) {
@@ -135,7 +141,7 @@ export function BookItem({ book, isActive, onSelect, onEdit, onDelete, onExport 
 interface EditBookModalProps {
   open: boolean;
   book: Book | null;
-  form: any;
+  form: FormInstance<{ title: string }>;
   loading: boolean;
   onSave: () => void;
   onClose: () => void;
