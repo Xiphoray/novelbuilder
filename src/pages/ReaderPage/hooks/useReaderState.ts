@@ -79,19 +79,12 @@ export function useReaderState() {
     return () => clearInterval(timer);
   }, [appendLoading]);
 
-  // 滚动检测追加生成
+  // 打开并开始阅读最后一章时允许自动追加
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container || !currentBook || currentBook.type !== 'ai') return;
-    const handleScroll = () => {
-      const isLastChapter = currentChapterIndex >= currentChapters.length - 1;
-      if (!isLastChapter || appendLoading) { setCanAppend(false); return; }
-      const scrollPercent = container.scrollTop / (container.scrollHeight - container.clientHeight);
-      setCanAppend(scrollPercent > 0.6);
-    };
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [currentChapterIndex, currentChapters.length, currentBook, appendLoading]);
+    const isAIBook = currentBook?.type === 'ai';
+    const isLastChapter = currentChapterIndex >= currentChapters.length - 1;
+    setCanAppend(Boolean(isAIBook && isLastChapter && !appendLoading && currentChapters.length > 0));
+  }, [appendLoading, currentBook, currentChapterIndex, currentChapters.length, setCanAppend]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);

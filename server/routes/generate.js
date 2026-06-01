@@ -40,12 +40,12 @@ ${summary || '暂无摘要'}
 ${recentContent}
 
 要求：
-1. 从第${toChineseNumber(nextIndex)}章开始续写，创作接下来2个章节
-2. 保持与已有内容在剧情、人物、文风上的一致性
-3. 每个章节约2000字
-4. 每个章节以"第X章 章节标题"开头（X为中文数字，续接已有编号）
-5. 章节之间用两个换行符分隔
-6. 不要重复已有章节内容，直接从新章节开始`,
+1. 从第${toChineseNumber(nextIndex)}章开始续写，必须严格创作接下来2个章节，不能少于2章，也不能只返回1章
+2. 这2个章节必须分别以“第${toChineseNumber(nextIndex)}章 …”和“第${toChineseNumber(nextIndex + 1)}章 …”开头
+3. 保持与已有内容在剧情、人物、文风上的一致性
+4. 每个章节约2000字
+5. 两个章节之间用两个换行符分隔
+6. 不要输出说明、备注、分隔符或额外标题，不要重复已有章节内容，直接从新章节开始`,
   },
   summary: {
     system: '你是一位专业的内容分析师。请对小说内容进行结构化摘要，提取关键信息用于后续创作参考。',
@@ -73,6 +73,74 @@ function formatChapters(chapters, startIndex = 1) {
     content: ch.content,
     wordCount: ch.content.replace(/\s/g, '').length,
   }));
+}
+
+function stripLeadingChapterTitle(content, title) {
+  const normalizedTitle = (title || '').trim();
+  if (!normalizedTitle) return content.trim();
+
+  const normalizedContent = content.replace(/^\uFEFF/, '').trimStart();
+  if (!normalizedContent.startsWith(normalizedTitle)) {
+    return content.trim();
+  }
+
+  return normalizedContent.slice(normalizedTitle.length).trimStart();
+}
+
+function normalizeAppendChapters(chapters, nextIndex) {
+  return chapters.map((ch, i) => {
+    const chapterIndex = nextIndex + i;
+    return {
+      title: `第${toChineseNumber(chapterIndex)}章`,
+      content: stripLeadingChapterTitle(ch.content, ch.title),
+    };
+  });
+}
+
+function splitSingleAppendChapter(chapter, nextIndex) {
+  const content = (chapter?.content || '').trim();
+  if (!content) return [];
+
+  const secondChapterMarkers = [
+    new RegExp(`(^|\\n)第\\s*${toChineseNumber(nextIndex + 1)}\\s*章`, 'm'),
+    new RegExp(`(^|\\n)第\\s*${nextIndex + 1}\\s*章`, 'm'),
+  ];
+
+  for (const marker of secondChapterMarkers) {
+    const match = content.match(marker);
+    if (!match || match.index === undefined) continue;
+
+    const splitIndex = match.index + (match[1] ? match[1].length : 0);
+    const firstContent = content.slice(0, splitIndex).trim();
+    const secondBlock = content.slice(splitIndex).trim();
+    const secondTitleMatch = secondBlock.match(/^(第\s*[一二三四五六七八九十百千万零\d]+\s*章[^\n]*)/);
+    const secondTitle = secondTitleMatch?.[1]?.replace(/\s+/g, '') || `第${toChineseNumber(nextIndex + 1)}章`;
+    const secondContent = stripLeadingChapterTitle(secondBlock, secondTitle);
+
+    if (firstContent && secondContent) {
+      return [
+        { title: `第${toChineseNumber(nextIndex)}章`, content: firstContent },
+        { title: `第${toChineseNumber(nextIndex + 1)}章`, content: secondContent },
+      ];
+    }
+  }
+
+  return [];
+}
+
+function ensureTwoAppendChapters(chapters, nextIndex) {
+  if (chapters.length >= 2) {
+    return normalizeAppendChapters(chapters.slice(0, 2), nextIndex);
+  }
+
+  if (chapters.length === 1) {
+    const splitChapters = splitSingleAppendChapter(chapters[0], nextIndex);
+    if (splitChapters.length === 2) {
+      return splitChapters;
+    }
+  }
+
+  throw new Error('AI 续写结果不足 2 章，请重试');
 }
 
 function getSSEHeaders() {
@@ -273,11 +341,16 @@ router.post('/api/generate/append/stream', async (req, res) => {
     }
     
     const { chapters } = parseNovelContent(fullContent);
-    log('INFO', '=== AI Append Generation (Stream) Completed ===', { bookId, newChapterCount: chapters.length });
+    const normalizedChapters = ensureTwoAppendChapters(chapters, nextIndex);
+    log('INFO', '=== AI Append Generation (Stream) Completed ===', {
+      bookId,
+      newChapterCount: normalizedChapters.length,
+      chapterTitles: normalizedChapters.map(ch => ch.title),
+    });
     
     res.write(`data: ${JSON.stringify({
       type: 'done',
-      data: { chapters: formatChapters(chapters, nextIndex) },
+      data: { chapters: formatChapters(normalizedChapters, nextIndex) },
     })}\n\n`);
     res.end();
   } catch (error) {
@@ -313,11 +386,16 @@ router.post('/api/generate/append', async (req, res) => {
     });
     
     const { chapters } = parseNovelContent(content);
-    log('INFO', '=== AI Append Generation Completed ===', { bookId, newChapterCount: chapters.length });
+    const normalizedChapters = ensureTwoAppendChapters(chapters, nextIndex);
+    log('INFO', '=== AI Append Generation Completed ===', {
+      bookId,
+      newChapterCount: normalizedChapters.length,
+      chapterTitles: normalizedChapters.map(ch => ch.title),
+    });
     
     res.json({
       code: 0, message: 'success',
-      data: { chapters: formatChapters(chapters, nextIndex), usage },
+      data: { chapters: formatChapters(normalizedChapters, nextIndex), usage },
     });
   } catch (error) {
     log('ERROR', 'AI append failed', { error: error.message });
