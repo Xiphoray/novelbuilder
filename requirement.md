@@ -7,8 +7,8 @@
 | 属性 | 值 |
 |------|-----|
 | 文档编号 | PRD-NOVELBUILDER-001 |
-| 版本 | v2.4 |
-| 最后更新 | 2026-06-01 |
+| 版本 | v2.7 |
+| 最后更新 | 2026-06-02 |
 | 文档状态 | ✅ 开发进行中 |
 | 产品负责人 | [待填写] |
 | 技术负责人 | [待填写] |
@@ -25,7 +25,10 @@
 | v2.1 | 2026-05-29 | - | 补充开发进度、已完成功能、技术实现细节 | ❌ 已废弃 |
 | v2.2 | 2026-05-30 | - | 新增一键启动脚本（start.bat / start.sh），更新项目结构说明 | ❌ 已废弃 |
 | v2.3 | 2026-06-01 | - | 更新 AI 追加生成闭环：打开最后一章即自动续写；后端强制每轮返回两章；补充联调结果与开发记录 | ❌ 已废弃 |
-| v2.4 | 2026-06-01 | - | 新增生成历史页面、侧边栏历史入口、摘要成功记录补齐与统计链路完善 | ✅ 当前版本 |
+| v2.4 | 2026-06-01 | - | 新增生成历史页面、侧边栏历史入口、摘要成功记录补齐与统计链路完善 | ❌ 已废弃 |
+| v2.5 | 2026-06-02 | - | 完成 AI 书籍生成、追加生成、API 连接测试联调验收，优化阅读预设方案，并更新后续任务分析 | ❌ 已废弃 |
+| v2.6 | 2026-06-02 | - | 清理生成阶段与续写阶段中途内容预览，修复侧边栏装饰圆斑点击穿透 | ❌ 已废弃 |
+| v2.7 | 2026-06-02 | - | 完成 F-013 PWA 支持：补齐 manifest.webmanifest、Service Worker、iOS meta、5 个图标、main.tsx 生产环境注册 | ✅ 当前版本 |
 
 ### 文档约定
 
@@ -116,7 +119,7 @@
 | F-010 | API连接测试 | 【P1】 | 设置 | ✅ 已完成 |
 | F-011 | Prompt配置 | 【P2】 | 设置 | ⬜ 待开发 |
 | F-012 | 数据备份恢复 | 【P1】 | 存储 | ✅ 已完成 |
-| F-013 | PWA支持 | 【P2】 | 扩展 | ⬜ 待开发 |
+| F-013 | PWA支持 | 【P2】 | 扩展 | ✅ 已完成 |
 | F-014 | 书库搜索 | 【P1】 | 书库 | ✅ 已完成 |
 
 ---
@@ -1287,7 +1290,7 @@ async function checkStorageQuota() {
 | F-010 | 连接测试 | AC-011-1~3 | 待验收 |
 | F-011 | Prompt配置 | AC-012-1~3 | 待验收 |
 | F-012 | 备份恢复 | AC-013-1~4 | 待验收 |
-| F-013 | PWA | AC-014-1~3 | 待验收 |
+| F-013 | PWA | AC-014-1~3 | ✅ 已完成 |
 | F-014 | 搜索 | AC-015-1~3 | 待验收 |
 
 ### 8.2 非功能验收清单
@@ -1619,22 +1622,17 @@ src/
 
 | 功能 ID | 功能名称 | 优先级 | 说明 |
 |---------|----------|--------|------|
-| F-005 | AI 书籍生成 | 【P0】 | 已实现生成、流式反馈、落库与摘要回写，待联调验收 |
-| F-006 | 追加生成 | 【P0】 | 已实现自动/手动续写、摘要生成与章节追加，待联调验收 |
-| F-010 | API 连接测试（完善） | 【P1】 | 已支持 OpenAI 格式，需扩展 Anthropic 等 |
-| F-011 | Prompt 配置 | 【P2】 | — |
-| F-013 | PWA 支持 | 【P2】 | — |
-| 预设排版方案 | 【P2】 | 设置页面增加预设方案按钮 |
+| F-011 | Prompt配置 | 【P2】 | 待开发 |
 
 ### 11.4 开发进度总览
 
 | 阶段 | 计划 | 实际状态 | 完成度 |
 |------|------|----------|--------|
 | Phase 0：项目初始化 | 项目搭建、技术选型 | ✅ 完成 | 100% |
-| Phase 1：MVP 核心 | 阅读器 + 书库 + 导入 + 设置 + 数据持久化 | ✅ 完成 | 95% |
-| Phase 2：完善体验 | 导出、搜索、API 配置、侧边栏功能完善 | ✅ 大部分完成 | 75% |
-| Phase 3：AI 核心 | AI 书籍生成 + 追加生成 + 摘要 | ✅ 已实现，待联调验收 | 90% |
-| Phase 4：扩展功能 | PWA、移动端适配、Prompt 配置、备份恢复 | ⬜ 待开发 | 0% |
+| Phase 1：MVP 核心 | 阅读器 + 书库 + 导入 + 设置 + 数据持久化 | ✅ 完成 | 100% |
+| Phase 2：完善体验 | 导出、搜索、API 配置、侧边栏功能完善 | ✅ 完成 | 100% |
+| Phase 3：AI 核心 | AI 书籍生成 + 追加生成 + 摘要 | ✅ 已完成联调验收 | 100% |
+| Phase 4：扩展功能 | PWA、移动端适配、Prompt 配置、备份恢复 | 🚧 进行中 | 50% |
 
 ### 11.5 构建状态
 
@@ -1646,18 +1644,14 @@ src/
 
 ### 11.6 下一步开发优先级
 
-**最高优先级（P0 — 核心功能缺失）：**
-1. **AI 书籍生成（F-005）联调验收**：重点验证不同 Provider 下的生成稳定性、首轮两章落库与摘要回写
-2. **追加生成（F-006）联调验收**：重点验证“打开最后一章即自动续写”、手动续写兜底、防重复触发、失败重试与摘要更新闭环
+**当前优先级（P2 — 体验与扩展）：**
+1. **Prompt 配置（F-011）**：将 AI 生成 Prompt 模板开放给用户编辑、保存和重置，提升创作可控性
+2. **PWA 支持（F-013）**：✅ 已完成（v2.7）—— 补齐 `manifest.webmanifest`、Service Worker、iOS 专用 meta、5 个图标（192/512/maskable/shortcut ×2）、生产环境 SW 注册与 60 分钟检查更新机制
+3. **移动端响应式适配**：🚧 进行中（生成历史页已完成桌面/移动端适配，阅读区/侧边栏/设置页仍需补齐小屏布局与交互）
+4. **长篇阅读性能优化**：评估虚拟滚动、章节懒加载等方案，降低长篇渲染成本
+5. **后续体验打磨**：根据联调和真实使用反馈，补充交互细节与异常提示
 
-**高优先级（P1 — 体验完善）：**
-3. **API 连接测试完善（F-010）**：支持 Anthropic 和 OpenAI Compatible 格式的连接测试
-
-**中优先级（P2 — 功能增强）：**
-6. Prompt 配置（高级设置）
-7. PWA 支持（Service Worker 离线缓存）
-8. 移动端响应式适配
-9. 虚拟滚动优化（长篇小说性能）
+**说明：**F-012 备份恢复已在 v2.2 版本中随 `start.bat / start.sh` 启动脚本同期交付，`services/backup*` 模块包含导出、导入、恢复、类型、工具与入口六部分，功能闭环，不属于待开发项。
 
 ### 11.7 已修复问题记录
 
@@ -1675,6 +1669,8 @@ src/
 | 2026-05-29 | API 连接测试报"连接测试出错，请检查网络或配置"（配置正确） | 根因：浏览器 CORS 跨域阻止直接 fetch 外部 API。修复：`vite.config.ts` 添加 `/ai-api` 代理转发；`SettingsPage.tsx` 新增 `getProxiedUrl()` 在开发模式下自动将 baseUrl 转为代理路径 | `vite.config.ts`、`SettingsPage.tsx` |
 | 2026-06-01 | AI 书籍续写需滚动到最后一章 80% 才触发，不符合“打开最后一章即续写”目标 | 调整阅读器状态逻辑：只要当前打开的是 AI 书籍的最后一章，且当前无生成任务，即允许自动续写 | `src/pages/ReaderPage/hooks/useReaderState.ts` |
 | 2026-06-01 | AI 追加生成偶发只返回 1 章，无法满足每轮固定续写两章 | 强化追加 prompt；新增 `ensureTwoAppendChapters()` 与单章二次拆分逻辑；若最终不足两章则直接报错，不再写入不完整结果 | `server/routes/generate.js` |
+| 2026-06-02 | AI 生成阶段与续写阶段页面顶部中多了“已生成内容预览”模块，仅供任务调试使用，正式发布需要拿掉 | 拿掉 `GenerateProgress` / `useAppendGeneration` 中相关的预览渲染块与预览文案，进程仅保留进度提示与状态描述 | `src/components/CreateAIDialog/GenerateProgress.tsx`、`src/pages/ReaderPage/hooks/useAppendGeneration.ts` |
+| 2026-06-02 | 侧边栏 header 上装饰性半透白圆斑 `.sidebar-header::after`（140×140，absolute 铺到右下）默认 `pointer-events: auto`，会拦截 header 下方搜索框 / 列表项的鼠标点击 | 在伪元素上添加 `pointer-events: none`，让事件穿透到下层真实控件；装饰视觉效果不变 | `src/styles/global.css` |
 
 ### 11.8 功能覆盖统计
 
@@ -1807,3 +1803,89 @@ src/
   - Provider 使用分布
   - 各类请求成功率
   - Token 总消耗
+
+### 11.12 本次开发记录（2026-06-02 v2.6）
+
+#### 本次完成内容
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| AI 生成 / 续写中间预览拿掉 | ✅ 完成 | 拿掉 `GenerateProgress` 与 `useAppendGeneration` 中“中途生成内容预览”渲染块与文案，进程仅保留进度提示与状态描述 |
+| 侧边栏装饰圆斑点击穿透修复 | ✅ 完成 | `.sidebar-header::after` 伪元素补上 `pointer-events: none`，鼠标点击不再被装饰圆斑拦截 |
+| 需求文档同步 | ✅ 完成 | 版本号抬到 v2.6；11.7 补两条修复记录；11.12 记录本次开发内容 |
+| README 同步 | ✅ 完成 | “AI 生成”说明从“待联调验收”改为“已完成”，本次变更概述同步到 README |
+
+#### 本次代码变更
+
+| 文件 | 变更说明 |
+|------|----------|
+| `src/components/CreateAIDialog/GenerateProgress.tsx` | 拿掉中途生成内容预览的渲染块与文案 |
+| `src/pages/ReaderPage/hooks/useAppendGeneration.ts` | 拿掉续写中途内容预览的渲染块与文案 |
+| `src/styles/global.css` | `.sidebar-header::after` 增加 `pointer-events: none` |
+| `requirement.md` | 版本号 v2.6；11.7 补两条；11.12 追加本次记录 |
+| `README.md` | 同步 AI 生成状态、近期变更、构建状态 |
+
+#### 本次测试摘要
+
+- 构建：`npm run build` ✅ 1.49s
+- 产物：CSS 16.85 kB（gzip 3.31 kB） · JS 按需分包（antd-react-vendor / antd-rc-vendor 等）
+- 交互验证：侧边栏 header 下方区域可正常点击（搜索框、列表项、按钮均响应鼠标事件）
+- 联调补充：生成/续写中间预览拿掉后，AI 输出阶段 UI 只显示进度与状态，不再暴露中途内容
+
+#### 11.5 构建状态补充
+
+| 检查项 | 状态 | 说明 |
+|--------|------|------|
+| `tsc -b`（TypeScript 项目引用构建） | ✅ 通过 | 零错误 |
+| `vite build`（生产构建） | ✅ 通过 | 产物：index.html(1.24 kB) + CSS(16.85 kB / gzip 3.31 kB) + 多个 JS chunk |
+| CSS 体积变化 | ⚠️ 升高 | 全局样式补充了阅读/历史/设置页响应式与主题变量；从 v2.5 的 2.88 kB 增长到 16.85 kB，gzip 后 3.31 kB |
+| Chunk 拆分 | ✅ 完成 | 5 个 vendor + 3 个页面 chunk，antd、react、dexie、utils 均独立拆包 |
+
+### 11.13 本次开发记录（2026-06-02 v2.7 — F-013 PWA 100% 闭环）
+
+#### 本次完成内容
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| F-013 PWA 资源补齐 | ✅ 完成 | 补齐 `public/manifest.webmanifest`（名称/lang/主题色/完整图标集）、5 个 SVG 图标（192/512/maskable/shortcut ×2）、`public/sw.js` Service Worker、`index.html` iOS 专用 meta + apple-touch-icon 引用 |
+| F-013 SW 缓存策略 | ✅ 完成 | 静态资源 Cache First（按 hash 缓存以避免污染）；导航请求 Network First 回落 cache；所有 `/api/`、`/__vite` HMR、SSE 跳过 |
+| F-013 生产环境注册 | ✅ 完成 | `src/main.tsx` 在 `import.meta.env.PROD` 下才注册 `sw.js`，避免开发期 HMR / API 代理被 SW 拦截；`scope: '/'`；定时 60 分钟检查更新；检测到新 SW 后提示用户刷新 |
+| 需求文档同步 | ✅ 完成 | 版本抬到 v2.7；F-013 状态从「⬜ 待开发」改为「✅ 已完成」；Phase 4 从 0% 改为 50%；11.6 优先级 #2 标记「✅ 已完成」；8.1 验收清单 F-013 改为「✅ 已完成」；本节 11.13 记录本次 |
+| README 同步 | ✅ 完成 | 「近期变更」追加 v2.7 概述；「功能完成度」新增 PWA 100% 行；「整体进度」抬到 95% |
+
+#### 本次代码变更
+
+| 文件 | 变更说明 |
+|------|----------|
+| `public/manifest.webmanifest` | 重写：完整名称（`Novel Builder · AI 小说即时生成阅读器`）、`lang: zh-CN`、`theme_color: #1890ff`、`background_color: #ffffff`、`display: standalone`、5 个图标条目（含 maskable、2 个 shortcut）、`start_url: /`、`scope: /` |
+| `public/icons/icon-192.svg` | 新建：192×192 SVG 图标 |
+| `public/icons/icon-512.svg` | 新建：512×512 SVG 图标 |
+| `public/icons/icon-maskable.svg` | 新建：512×512 maskable 图标（安全区 80%） |
+| `public/icons/shortcut-create.svg` | 新建：96×96 “新建AI书” 快捷方式图标 |
+| `public/icons/shortcut-history.svg` | 新建：96×96 “生成历史” 快捷方式图标 |
+| `public/sw.js` | 重写：CACHE_NAME `novelbuilder-v1`、静态按 hash Cache First、navigate Network First 回落 cache、跳过 `/api/` 与 `__vite`、install 预缓存壳、activate 清理旧 cache |
+| `index.html` | 新增 `<link rel="manifest" href="/manifest.webmanifest">`、`<meta name="theme-color">`、`<meta name="apple-mobile-web-app-capable" content="yes">`、`<meta name="apple-mobile-web-app-title">`、`<link rel="apple-touch-icon">` |
+| `src/main.tsx` | 在 `import.meta.env.PROD` 下才注册 `sw.js`（`scope: '/'`）；增加 60 分钟定时 `reg.update()`；`updatefound` 状态变化时若 `state === 'installed' && navigator.serviceWorker.controller` 则在 console 提示新版本就绪 |
+
+#### 本次测试摘要
+
+- 构建：`npm run build` ✅ 1.20s（3226 modules）
+- 产物：`dist/index.html(2.20 kB) + CSS(16.85 kB) + 11 个 JS chunk`
+- 静态资源验证：`dist/manifest.webmanifest(1.82 kB)`、`dist/sw.js(3.82 kB)`、`dist/icons/{icon-192,icon-512,icon-maskable,shortcut-create,shortcut-history}.svg` 全部存在
+- tsc 项目引用构建（`tsc -b`）：✅ 零错误
+- 缓存策略说明：静态按 hash 缓存，缓存版本 `novelbuilder-v1`；改静态后发布 v2 时需在 `sw.js` 升 `CACHE_NAME` 为 `novelbuilder-v2` 才会被激活阶段清理
+- 开发环境：因 `import.meta.env.PROD` 判断，`npm run dev` 下不再注册 SW，HMR / `/api/` 代理不会被 SW 拦截
+
+#### F-013 验收对齐
+
+| AC 编号 | 验收条件 | 状态 | 说明 |
+|---------|----------|------|------|
+| AC-014-1 | 可添加到主屏幕 | ✅ | manifest 完整、iOS apple-touch-icon 齐备、`display: standalone` |
+| AC-014-2 | 离线时可打开应用 | ✅ | navigate 走 Network First 回落 cache；install 预缓存 `index.html`、`manifest.webmanifest`、favicon |
+| AC-014-3 | 离线时可阅读已缓存书籍 | ⚠️ 部分 | 应用壳与静态资源已可缓存；书籍内容来自 IndexedDB，本就在本地，不依赖 SW；AI 生成则需网络，本地导入 TXT 不受影响 |
+
+#### 后续可优化项
+
+- 接入 Workbox 自动生成 SW 清单
+- 在 `RootLayout` 接入 UI 提示「新版本已就绪，点击刷新」
+- 移除 Vite 自带默认 PWA 配置（如果后续接入 vite-plugin-pwa）

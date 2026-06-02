@@ -10,11 +10,10 @@ const { Text } = Typography;
 interface GenerateProgressProps {
   progress: string;
   elapsedTime: number;
-  streamContent: string;
   formatTime: (seconds: number) => string;
 }
 
-export function GenerateProgress({ progress, elapsedTime, streamContent, formatTime }: GenerateProgressProps) {
+export function GenerateProgress({ progress, elapsedTime, formatTime }: GenerateProgressProps) {
   return (
     <div style={{
       marginTop: 16,
@@ -65,25 +64,6 @@ export function GenerateProgress({ progress, elapsedTime, streamContent, formatT
       <div style={{ marginTop: 8, fontSize: 12, color: '#999' }}>
         <ThunderboltOutlined /> 预计还需要 30-120 秒，取决于模型响应速度
       </div>
-
-      {/* 流式内容预览 */}
-      {streamContent && (
-        <div style={{
-          marginTop: 12,
-          padding: '8px 12px',
-          background: '#fff',
-          borderRadius: 4,
-          border: '1px solid #e8e8e8',
-          maxHeight: 120,
-          overflow: 'auto',
-          fontSize: 12,
-          color: '#666',
-          lineHeight: 1.6
-        }}>
-          <div style={{ marginBottom: 4, fontWeight: 600, color: '#333' }}>📝 内容预览：</div>
-          {streamContent.slice(-500)}{streamContent.length > 500 && '...'}
-        </div>
-      )}
     </div>
   );
 }

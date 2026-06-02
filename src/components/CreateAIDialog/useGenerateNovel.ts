@@ -21,7 +21,6 @@ import {
 interface UseGenerateNovelReturn {
   generating: boolean;
   progress: string;
-  streamContent: string;
   elapsedTime: number;
   handleGenerate: (
     selectedTags: string[],
@@ -29,14 +28,12 @@ interface UseGenerateNovelReturn {
     onClose: () => void,
     resetForm: () => void,
   ) => Promise<void>;
-  setStreamContent: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export function useGenerateNovel(): UseGenerateNovelReturn {
   const { message } = App.useApp();
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState('');
-  const [streamContent, setStreamContent] = useState('');
   const [elapsedTime, setElapsedTime] = useState(0);
 
   const addBook = useBookStore((s) => s.addBook);
@@ -64,7 +61,6 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
 
     setGenerating(true);
     setProgress('正在连接 AI 服务...');
-    setStreamContent('');
     setElapsedTime(0);
 
     // 计时器
@@ -83,7 +79,8 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
         { style: selectedTags, userPrompt: customPrompt || undefined },
         {
           onStart: () => setProgress('AI 已收到请求，开始创作...'),
-          onDelta: (_content, accumulated) => setStreamContent(accumulated),
+          // 预取消内容预览：仅按需用于完成后的保存，此处不保留中间内容
+          onDelta: () => undefined,
           onDone: (data) => { streamResult = data; },
           onError: (msg) => { throw new Error(msg); },
         },
@@ -201,5 +198,5 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
     }
   };
 
-  return { generating, progress, streamContent, elapsedTime, handleGenerate, setStreamContent };
+  return { generating, progress, elapsedTime, handleGenerate };
 }

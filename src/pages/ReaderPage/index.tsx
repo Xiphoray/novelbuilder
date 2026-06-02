@@ -2,6 +2,7 @@
  * F-003: 阅读器页面
  */
 
+import { useMemo } from 'react';
 import { Typography, Empty, FloatButton } from 'antd';
 import { ToTopOutlined } from '@ant-design/icons';
 import { exportBookAsTxt } from '@/services/exportService';
@@ -18,7 +19,6 @@ export default function ReaderPage() {
     handleAppend,
     cancelAppend,
     retryAppend,
-    appendPreview,
     appendStatus,
     appendError,
     canRetry,
@@ -31,6 +31,15 @@ export default function ReaderPage() {
     appendElapsed, canAppend, themeClass, scrollContainerRef,
     formatTime, handlePrevChapter, handleNextChapter, handleTOCJump, handleBackToTop,
   } = reader;
+
+  const currentChapter = currentChapters[currentChapterIndex];
+  const currentChapterParagraphs = useMemo(() => {
+    if (!currentChapter) return [];
+    return currentChapter.content
+      .split(/\n/)
+      .map((para) => para.trim())
+      .filter(Boolean);
+  }, [currentChapter?.id, currentChapter?.content]);
 
   const handleDownload = () => {
     if (!currentBook) return;
@@ -45,8 +54,6 @@ export default function ReaderPage() {
       </div>
     );
   }
-
-  const currentChapter = currentChapters[currentChapterIndex];
 
   return (
     <div ref={scrollContainerRef} className={`${themeClass} reader-page`} style={{ height: '100%', overflow: 'auto', transition: 'background-color 0.3s, color 0.3s' }}>
@@ -74,7 +81,7 @@ export default function ReaderPage() {
         {currentChapter ? (
           <div className="reader-page__chapter">
             <Title level={4} className="reader-page__chapter-title" style={{ transition: 'color 0.3s' }}>{currentChapter.title}</Title>
-            {currentChapter.content.split(/\n/).map((para, i) => (
+            {currentChapterParagraphs.map((para, i) => (
               <Paragraph key={i} className="reader-page__paragraph" style={{ transition: 'color 0.3s' }}>{para}</Paragraph>
             ))}
           </div>
@@ -92,7 +99,6 @@ export default function ReaderPage() {
           onAppend={() => { void handleAppend(); }}
           onCancelAppend={cancelAppend}
           onRetryAppend={() => { void retryAppend(); }}
-          appendPreview={appendPreview}
           appendStatus={appendStatus}
           appendError={appendError}
           canRetry={canRetry}

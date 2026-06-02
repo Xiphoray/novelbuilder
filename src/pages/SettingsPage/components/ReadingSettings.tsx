@@ -15,24 +15,66 @@ const themeOptions: { label: string; value: ThemeType }[] = [
   { label: '护眼', value: 'eye-care' },
 ];
 
-const READING_PRESETS = [
+type ReadingPreset = {
+  name: string;
+  desc: string;
+  settings: ReadingSettings;
+};
+
+const READING_PRESETS: ReadingPreset[] = [
   {
-    name: '默认模式', desc: '系统默认设置',
-    settings: { fontSize: 18, lineHeight: 1.8, fontFamily: '-apple-system, "Microsoft YaHei", sans-serif', theme: 'light' as ThemeType, contentWidth: 800 },
+    name: '默认模式',
+    desc: '系统默认设置',
+    settings: {
+      fontSize: 18,
+      lineHeight: 1.8,
+      fontFamily: '-apple-system, "Microsoft YaHei", sans-serif',
+      theme: 'light' as ThemeType,
+      contentWidth: 800,
+    },
   },
   {
-    name: '舒适模式', desc: '大字号，宽松行距，护眼色',
-    settings: { fontSize: 22, lineHeight: 2.0, fontFamily: '"KaiTi", serif', theme: 'eye-care' as ThemeType, contentWidth: 750 },
+    name: '舒适模式',
+    desc: '大字号，宽松行距，护眼色',
+    settings: {
+      fontSize: 22,
+      lineHeight: 2.0,
+      fontFamily: '"KaiTi", serif',
+      theme: 'eye-care' as ThemeType,
+      contentWidth: 750,
+    },
   },
   {
-    name: '夜间模式', desc: '暗色主题，适合夜间阅读',
-    settings: { fontSize: 18, lineHeight: 1.8, fontFamily: '-apple-system, "Microsoft YaHei", sans-serif', theme: 'dark' as ThemeType, contentWidth: 800 },
+    name: '夜间模式',
+    desc: '暗色主题，适合夜间阅读',
+    settings: {
+      fontSize: 18,
+      lineHeight: 1.8,
+      fontFamily: '-apple-system, "Microsoft YaHei", sans-serif',
+      theme: 'dark' as ThemeType,
+      contentWidth: 800,
+    },
   },
   {
-    name: '紧凑模式', desc: '小字号，窄行距，一次看更多',
-    settings: { fontSize: 15, lineHeight: 1.4, fontFamily: '"Courier New", monospace', theme: 'light' as ThemeType, contentWidth: 900 },
+    name: '紧凑模式',
+    desc: '小字号，窄行距，一次看更多',
+    settings: {
+      fontSize: 15,
+      lineHeight: 1.4,
+      fontFamily: '"Courier New", monospace',
+      theme: 'light' as ThemeType,
+      contentWidth: 900,
+    },
   },
 ];
+
+function isSamePreset(current: ReadingSettings, preset: ReadingSettings) {
+  return current.fontSize === preset.fontSize
+    && current.lineHeight === preset.lineHeight
+    && current.fontFamily === preset.fontFamily
+    && current.theme === preset.theme
+    && current.contentWidth === preset.contentWidth;
+}
 
 interface ReadingPresetsProps {
   readingSettings: ReadingSettings;
@@ -47,10 +89,17 @@ export function ReadingPresets({ readingSettings, applyPreset }: ReadingPresetsP
       </Text>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {READING_PRESETS.map((preset) => {
-          const isActive = readingSettings.fontSize === preset.settings.fontSize && readingSettings.theme === preset.settings.theme;
+          const isActive = isSamePreset(readingSettings, preset.settings);
           return (
-            <Card key={preset.name} hoverable size="small"
-              style={{ width: 180, border: isActive ? '2px solid #1677ff' : '1px solid #e8e8e8', cursor: 'pointer' }}
+            <Card
+              key={preset.name}
+              hoverable
+              size="small"
+              style={{
+                width: 180,
+                border: isActive ? '2px solid #1677ff' : '1px solid #e8e8e8',
+                cursor: 'pointer',
+              }}
               onClick={() => applyPreset(preset)}
             >
               <div style={{ fontWeight: 600, marginBottom: 4 }}>
@@ -59,7 +108,7 @@ export function ReadingPresets({ readingSettings, applyPreset }: ReadingPresetsP
               </div>
               <Text type="secondary" style={{ fontSize: 12 }}>{preset.desc}</Text>
               <div style={{ marginTop: 8, fontSize: 11, color: '#999' }}>
-                字号 {preset.settings.fontSize}px · 行距 {preset.settings.lineHeight}
+                字号 {preset.settings.fontSize}px · 行距 {preset.settings.lineHeight} · 宽度 {preset.settings.contentWidth}px
               </div>
             </Card>
           );

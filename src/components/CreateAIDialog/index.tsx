@@ -27,7 +27,7 @@ export default function CreateAIDialog({ open, onClose }: CreateAIDialogProps) {
   const activeAIConfig = useSettingsStore((s) => s.activeAIConfig);
   const isAIConfigured = Boolean(activeAIConfig && activeAIConfig.apiKey);
 
-  const { generating, progress, streamContent, elapsedTime, handleGenerate } = useGenerateNovel();
+  const { generating, progress, elapsedTime, handleGenerate } = useGenerateNovel();
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
@@ -135,7 +135,6 @@ export default function CreateAIDialog({ open, onClose }: CreateAIDialogProps) {
             <GenerateProgress
               progress={progress}
               elapsedTime={elapsedTime}
-              streamContent={streamContent}
               formatTime={formatTime}
             />
           )}

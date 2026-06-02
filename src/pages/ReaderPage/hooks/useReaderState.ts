@@ -86,11 +86,11 @@ export function useReaderState() {
     setCanAppend(Boolean(isAIBook && isLastChapter && !appendLoading && currentChapters.length > 0));
   }, [appendLoading, currentBook, currentChapterIndex, currentChapters.length, setCanAppend]);
 
-  const formatTime = (seconds: number): string => {
+  const formatTime = useCallback((seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return mins > 0 ? `${mins}分${secs}秒` : `${secs}秒`;
-  };
+  }, []);
 
   const handlePrevChapter = useCallback(() => {
     if (currentChapterIndex > 0) setCurrentChapterIndex(currentChapterIndex - 1);

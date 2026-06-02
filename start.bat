@@ -31,7 +31,7 @@ if not exist "node_modules" (
 
 echo.
 echo [2/4] 启动后端服务 (端口 5299)...
-start "NovelBuilder-Backend" cmd /k "cd server && node index.js"
+start "NovelBuilder-Backend" cmd /k "npm run server"
 
 echo.
 echo [3/4] 等待后端启动...

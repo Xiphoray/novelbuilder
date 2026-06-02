@@ -1,0 +1,71 @@
+{
+  "name": "Novel Builder - AI 小说生成阅读器",
+  "short_name": "Novel Builder",
+  "description": "AI 驱动的即时小说生成与阅读器，边读边写，让 AI 成为你的创作搭档",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/novelbuilder",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "background_color": "#f6f8fc",
+  "theme_color": "#1677ff",
+  "orientation": "any",
+  "categories": ["books", "productivity", "entertainment"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "新建 AI 小说",
+      "short_name": "新建",
+      "description": "快速创建一部 AI 生成小说",
+      "url": "/?action=create",
+      "icons": [
+        {
+          "src": "/icons/shortcut-create.svg",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "阅读历史",
+      "short_name": "历史",
+      "description": "查看生成历史记录",
+      "url": "/#/history",
+      "icons": [
+        {
+          "src": "/icons/shortcut-history.svg",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
+}

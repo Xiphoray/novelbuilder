@@ -3,7 +3,7 @@ import Sidebar from '@/components/Sidebar';
 import CreateAIDialog from '@/components/CreateAIDialog';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useBookStore } from '@/stores/bookStore';
-import { ConfigProvider, Modal, Select, message, theme } from 'antd';
+import { ConfigProvider, Modal, Select, message, theme, App as AntdApp } from 'antd';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { ThemeType } from '@/types';
 import { importBookFromFile, extractTxtFilesFromDragEvent } from '@/services/importService';
@@ -122,71 +122,73 @@ export default function RootLayout() {
   );
 
   return (
-    <ConfigProvider
-      theme={{
-        algorithm: themeMap[currentTheme],
-        token: {
-          colorPrimary: '#1677ff',
-          borderRadius: 6,
-        },
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          height: '100vh',
-          position: 'relative',
-          background:
-            currentTheme === 'dark'
-              ? '#141414'
-              : currentTheme === 'eye-care'
-                ? '#f0e6d3'
-                : '#ffffff',
+    <AntdApp>
+      <ConfigProvider
+        theme={{
+          algorithm: themeMap[currentTheme],
+          token: {
+            colorPrimary: '#1677ff',
+            borderRadius: 6,
+          },
         }}
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
       >
-        <Sidebar
-          visible={sidebarVisible}
-          onToggle={() => setSidebarVisible(!sidebarVisible)}
-          theme={currentTheme}
-          onCreateAI={() => setCreateAIOpen(true)}
-          onOpenHistory={() => navigate('/history')}
-          onOpenSettings={() => navigate('/settings')}
-        />
-        <CreateAIDialog open={createAIOpen} onClose={() => setCreateAIOpen(false)} />
-        <main style={{ flex: '1 1 0%', overflow: 'auto', minHeight: 0 }}>
-          <Outlet />
-        </main>
-
-        {/* 编码选择弹框 */}
-        <Modal
-          title="选择文件编码"
-          open={encodingModalOpen}
-          onOk={handleEncodingConfirm}
-          onCancel={() => {
-            setEncodingModalOpen(false);
-            setPendingFile(null);
+        <div
+          style={{
+            display: 'flex',
+            height: '100vh',
+            position: 'relative',
+            background:
+              currentTheme === 'dark'
+                ? '#141414'
+                : currentTheme === 'eye-care'
+                  ? '#f0e6d3'
+                  : '#ffffff',
           }}
-          okText="确认导入"
-          cancelText="取消"
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
         >
-          <p style={{ marginBottom: 8 }}>
-            无法自动识别文件 "{pendingFile?.name}" 的编码，请手动选择：
-          </p>
-          <Select
-            value={selectedEncoding}
-            onChange={setSelectedEncoding}
-            options={ENCODING_OPTIONS}
-            style={{ width: '100%' }}
+          <Sidebar
+            visible={sidebarVisible}
+            onToggle={() => setSidebarVisible(!sidebarVisible)}
+            theme={currentTheme}
+            onCreateAI={() => setCreateAIOpen(true)}
+            onOpenHistory={() => navigate('/history')}
+            onOpenSettings={() => navigate('/settings')}
           />
-        </Modal>
+          <CreateAIDialog open={createAIOpen} onClose={() => setCreateAIOpen(false)} />
+          <main style={{ flex: '1 1 0%', overflow: 'auto', minHeight: 0 }}>
+            <Outlet />
+          </main>
 
-        {/* 拖拽遮罩层 */}
-        {dragging && <div className="drag-overlay" />}
-      </div>
-    </ConfigProvider>
+          {/* 编码选择弹框 */}
+          <Modal
+            title="选择文件编码"
+            open={encodingModalOpen}
+            onOk={handleEncodingConfirm}
+            onCancel={() => {
+              setEncodingModalOpen(false);
+              setPendingFile(null);
+            }}
+            okText="确认导入"
+            cancelText="取消"
+          >
+            <p style={{ marginBottom: 8 }}>
+              无法自动识别文件 "{pendingFile?.name}" 的编码，请手动选择：
+            </p>
+            <Select
+              value={selectedEncoding}
+              onChange={setSelectedEncoding}
+              options={ENCODING_OPTIONS}
+              style={{ width: '100%' }}
+            />
+          </Modal>
+
+          {/* 拖拽遮罩层 */}
+          {dragging && <div className="drag-overlay" />}
+        </div>
+      </ConfigProvider>
+    </AntdApp>
   );
 }

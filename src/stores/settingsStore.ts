@@ -86,7 +86,12 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   addAIConfig: (config) => {
     const configs = [...get().aiConfigs, config];
     saveAIConfigs(configs);
-    set({ aiConfigs: configs });
+    // 如果这是第一个配置，或新配置标记为 isActive，则同步 activeAIConfig
+    const hadActive = configs.some((c) => c.isActive);
+    const newActive = !hadActive || config.isActive
+      ? configs.find((c) => c.isActive) ?? configs[configs.length - 1]
+      : get().activeAIConfig;
+    set({ aiConfigs: configs, activeAIConfig: newActive });
   },
 
   updateAIConfig: (config) => {

@@ -30,9 +30,9 @@ export function useAppendGeneration(
     canAppend, setAppendLoading, setAppendProgress,
   } = reader;
 
-  const [appendPreview, setAppendPreview] = useState('');
   const [appendStatus, setAppendStatus] = useState<AppendStatus>('idle');
   const [lastError, setLastError] = useState('');
+  const [hasLastRequest, setHasLastRequest] = useState(false);
   const autoAppendKeyRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastRequestRef = useRef<AppendRequest | null>(null);
@@ -149,7 +149,6 @@ export function useAppendGeneration(
 
     setAppendStatus('idle');
     setLastError('');
-    setAppendPreview('');
 
     if (!options?.silent) {
       message.success(`已续写 ${newChapters.length} 章，共 ${request.currentChapterCount + newChapters.length} 章`);
@@ -165,11 +164,11 @@ export function useAppendGeneration(
     const controller = new AbortController();
     abortControllerRef.current = controller;
     lastRequestRef.current = request;
+    setHasLastRequest(true);
 
     setAppendLoading(true);
     setAppendStatus('generating');
     setLastError('');
-    setAppendPreview('');
     setAppendProgress('AI 正在续写章节...');
 
     let streamResult: AppendResponse | undefined;
@@ -186,8 +185,7 @@ export function useAppendGeneration(
         request,
         {
           onStart: () => setAppendProgress('AI 已收到请求，开始续写...'),
-          onDelta: (_content, accumulated) => {
-            setAppendPreview(accumulated);
+          onDelta: () => {
             setAppendProgress('AI 正在续写章节...');
           },
           onDone: (data) => {
@@ -278,10 +276,10 @@ export function useAppendGeneration(
   }, [appendLoading, runAppend]);
 
   useEffect(() => {
-    setAppendPreview('');
     setAppendStatus('idle');
     setLastError('');
     lastRequestRef.current = null;
+    setHasLastRequest(false);
     abortControllerRef.current = null;
   }, [currentBook?.id]);
 
@@ -316,9 +314,8 @@ export function useAppendGeneration(
     handleAppend,
     cancelAppend,
     retryAppend,
-    appendPreview,
     appendStatus,
     appendError: lastError,
-    canRetry: !!lastRequestRef.current && !appendLoading,
+    canRetry: hasLastRequest && !appendLoading,
   };
 }

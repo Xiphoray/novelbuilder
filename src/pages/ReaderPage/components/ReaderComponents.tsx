@@ -89,7 +89,6 @@ interface AppendSectionProps {
   onAppend: () => void;
   onCancelAppend: () => void;
   onRetryAppend: () => void;
-  appendPreview: string;
   appendStatus: 'idle' | 'generating' | 'error' | 'cancelled';
   appendError: string;
   canRetry: boolean;
@@ -107,7 +106,6 @@ export function AppendSection({
   onAppend,
   onCancelAppend,
   onRetryAppend,
-  appendPreview,
   appendStatus,
   appendError,
   canRetry,
@@ -127,12 +125,6 @@ export function AppendSection({
                 已等待 <span style={{ color: '#1677ff', fontWeight: 600 }}>{formatTime(appendElapsed)}</span>
                 {appendElapsed > 30 && <span> · 预计还需要 30-120 秒</span>}
               </div>
-              {appendPreview && (
-                <div className="reader-append-section__preview reader-append-section__preview--centered">
-                  <div style={{ marginBottom: 6, fontWeight: 600, color: '#333' }}>📝 续写预览</div>
-                  {appendPreview.slice(-600)}{appendPreview.length > 600 ? '...' : ''}
-                </div>
-              )}
               <div style={{ marginTop: 12 }}>
                 <Button danger icon={<StopOutlined />} onClick={onCancelAppend}>
                   停止续写
@@ -147,12 +139,6 @@ export function AppendSection({
                 message="续写失败"
                 description={appendError || 'AI 续写未完成，请稍后重试。'}
               />
-              {appendPreview && (
-                <div className="reader-append-section__preview">
-                  <div style={{ marginBottom: 6, fontWeight: 600, color: '#333' }}>📝 上次续写预览</div>
-                  {appendPreview.slice(-600)}{appendPreview.length > 600 ? '...' : ''}
-                </div>
-              )}
               <Space wrap className="reader-append-section__actions">
                 <Button type="primary" icon={<ReloadOutlined />} onClick={onRetryAppend} disabled={!canRetry}>
                   重新续写
@@ -165,12 +151,6 @@ export function AppendSection({
           ) : appendStatus === 'cancelled' ? (
             <Space direction="vertical" size={12}>
               <Text type="secondary">已停止本次续写。</Text>
-              {appendPreview && (
-                <div className="reader-append-section__preview reader-append-section__preview--centered">
-                  <div style={{ marginBottom: 6, fontWeight: 600, color: '#333' }}>📝 已停止前的续写预览</div>
-                  {appendPreview.slice(-600)}{appendPreview.length > 600 ? '...' : ''}
-                </div>
-              )}
               <Button type="primary" icon={<ReloadOutlined />} onClick={onRetryAppend} disabled={!canRetry}>
                 继续续写
               </Button>

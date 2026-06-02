@@ -4,6 +4,7 @@
 
 import { Button } from 'antd';
 import { BookOutlined } from '@ant-design/icons';
+import { useEffect, useState } from 'react';
 import type { Book } from '@/types';
 import { useBookStore } from '@/stores/bookStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -20,11 +21,26 @@ interface SidebarProps {
   onOpenSettings: () => void;
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  return isMobile;
+}
+
 export default function Sidebar({ visible, onToggle, theme, onCreateAI, onOpenHistory, onOpenSettings }: SidebarProps) {
   const books = useBookStore((s) => s.books);
   const currentBook = useBookStore((s) => s.currentBook);
   const storeTheme = useSettingsStore((s) => s.readingSettings.theme);
   const activeTheme = theme || storeTheme;
+  const isMobile = useIsMobile();
+  // 仅在移动端浮动模式下才需要遮罩；桌面端侧边栏是常驻区域，遮罩会拦截所有点击
+  const showOverlay = isMobile;
 
   const { search, setSearch, sort, setSort, filter, setFilter, sortedBooks } = useSidebarState(books);
   const { importing, editModalOpen, editingBook, editForm, editLoading, handleImportTxt, handleSelectBook, handleOpenEdit, handleSaveEdit, confirmDelete, handleExportBook, setEditModalOpen, setEditingBook } = useBookActions();
@@ -36,13 +52,13 @@ export default function Sidebar({ visible, onToggle, theme, onCreateAI, onOpenHi
       {!visible && (
         <Button type="text" className={`sidebar-toggle-btn ${activeTheme === 'dark' ? 'dark-theme' : ''}`} icon={<BookOutlined />} onClick={onToggle} title="打开书库" />
       )}
-      {visible && <div onClick={onToggle} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 998 }} />}
+      {visible && showOverlay && <div onClick={onToggle} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 1000 }} />}
 
-      <div className={sidebarThemeClass} style={{
+      <div className={`sidebar-panel ${sidebarThemeClass}`} style={{
         width: visible ? 320 : 0, minWidth: visible ? 320 : 0, height: '100%',
         display: 'flex', flexDirection: 'column', borderRight: visible ? '1px solid var(--border-color, #e8e8e8)' : 'none',
         background: 'var(--sidebar-bg, #fff)', overflow: 'hidden', transition: 'width 0.25s ease, min-width 0.25s ease',
-        position: 'relative', zIndex: 999,
+        position: 'relative', zIndex: 1001,
       }}>
         <Button type="text" size="small" icon={<span style={{ fontSize: 16 }}>‹</span>} onClick={onToggle} style={{ position: 'absolute', right: 4, top: 12, zIndex: 10, opacity: 0.5 }} title="收起书库" />
 
