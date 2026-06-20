@@ -194,7 +194,7 @@ export async function callAI(config, messages, options = {}) {
 /**
  * 调用 AI API - 流式模式（SSE）
  */
-export async function callAIStream(config, messages, options = {}) {
+export async function callAIStream(config, messages, options = {}, { signal } = {}) {
   // 补全 apiKey：调用方传了明文则直接用，否则按 id 从加密层解密
   config = withApiKey(config);
   let request;
@@ -218,6 +218,7 @@ export async function callAIStream(config, messages, options = {}) {
     method: 'POST',
     headers: request.headers,
     body: JSON.stringify(request.body),
+    signal,
   });
   
   if (!response.ok) {

@@ -65,6 +65,8 @@ interface SettingsStore {
   deleteAIConfig: (configId: string) => void;
   /** 设置活跃配置 */
   setActiveAIConfig: (configId: string) => void;
+  /** 以后端数据为准批量替换全部 AI 配置（sync 用） */
+  replaceAllAIConfigs: (configs: AIProviderConfig[]) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
@@ -102,7 +104,13 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   },
 
   deleteAIConfig: (configId) => {
-    const configs = get().aiConfigs.filter((c) => c.id !== configId);
+    const prev = get().aiConfigs;
+    const deletedWasActive = prev.find((c) => c.id === configId)?.isActive ?? false;
+    const configs = prev.filter((c) => c.id !== configId);
+    // 若删除的是当前活跃配置，自动激活第一个剩余配置（与后端行为一致）
+    if (deletedWasActive && configs.length > 0 && !configs.some((c) => c.isActive)) {
+      configs[0] = { ...configs[0]!, isActive: true };
+    }
     saveAIConfigs(configs);
     const active = configs.find((c) => c.isActive) ?? null;
     set({ aiConfigs: configs, activeAIConfig: active });
@@ -113,6 +121,12 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       ...c,
       isActive: c.id === configId,
     }));
+    saveAIConfigs(configs);
+    const active = configs.find((c) => c.isActive) ?? null;
+    set({ aiConfigs: configs, activeAIConfig: active });
+  },
+
+  replaceAllAIConfigs: (configs) => {
     saveAIConfigs(configs);
     const active = configs.find((c) => c.isActive) ?? null;
     set({ aiConfigs: configs, activeAIConfig: active });

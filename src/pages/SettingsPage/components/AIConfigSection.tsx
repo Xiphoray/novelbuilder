@@ -2,7 +2,7 @@
  * AI 配置组件
  */
 
-import { Form, Input, Select, Button, Space, Card, Divider, Typography, Tag, Radio } from 'antd';
+import { Form, Input, Select, Button, Space, Card, Divider, Typography, Tag } from 'antd';
 import type { FormInstance } from 'antd';
 import { ApiOutlined, SaveOutlined } from '@ant-design/icons';
 import type { AIProviderConfig, AIProviderType } from '@/types';
@@ -59,9 +59,6 @@ export function AIConfigSection({
         </Form.Item>
         <Form.Item name="modelId" label="模型 ID" rules={[{ required: true }]}>
           <Input placeholder="如：gpt-4o" />
-        </Form.Item>
-        <Form.Item name="isActive" label="启用" initialValue={true}>
-          <Radio.Group><Radio value={true}>是</Radio><Radio value={false}>否</Radio></Radio.Group>
         </Form.Item>
         <Space>
           <Button type="primary" icon={<SaveOutlined />} onClick={() => onSave(form)}>

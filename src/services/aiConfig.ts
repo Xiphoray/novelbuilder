@@ -2,7 +2,7 @@
  * AI 配置管理
  */
 
-import { apiPost, apiGet } from './aiClient';
+import { apiPost, apiGet, apiDelete } from './aiClient';
 import type { ConnectionTestResult, ServerConfigState } from './aiTypes';
 
 /**
@@ -49,7 +49,14 @@ export async function getServerConfig(): Promise<ServerConfigState> {
  * 设置活跃配置
  */
 export async function setActiveServerConfig(providerId: string): Promise<void> {
-  await apiPost('/config/activate', { providerId });
+  await apiPost('/config/activate', { id: providerId });
+}
+
+/**
+ * 删除后端配置
+ */
+export async function deleteServerConfig(providerId: string): Promise<void> {
+  await apiDelete(`/config/${providerId}`);
 }
 
 /**

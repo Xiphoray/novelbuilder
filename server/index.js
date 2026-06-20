@@ -6,7 +6,7 @@ import configRoutes from './routes/config.js';
 import generateRoutes from './routes/generate.js';
 
 const app = express();
-const PORT = process.env.PORT || 5299;
+const PORT = 5299;
 
 // ============ 中间件 ============
 app.use(cors());

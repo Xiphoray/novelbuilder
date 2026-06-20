@@ -280,8 +280,15 @@ export function useAppendGeneration(
     setLastError('');
     lastRequestRef.current = null;
     setHasLastRequest(false);
+    // 切换书籍时中止前一本书的未完成请求
+    abortControllerRef.current?.abort();
     abortControllerRef.current = null;
   }, [currentBook?.id]);
+
+  // 组件卸载（关闭阅读器）时中止正在进行的 SSE 连接
+  useEffect(() => () => {
+    abortControllerRef.current?.abort();
+  }, []);
 
   useEffect(() => {
     if (!currentBook || currentBook.type !== 'ai' || !currentBook.aiConfig) {

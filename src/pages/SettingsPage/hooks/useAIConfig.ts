@@ -13,6 +13,7 @@ import {
   getServerConfig,
   healthCheck,
   setActiveServerConfig,
+  deleteServerConfig,
 } from '@/services/aiConfig';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -47,6 +48,7 @@ export function useAIConfig() {
   const addAIConfig = useSettingsStore((s) => s.addAIConfig);
   const updateAIConfig = useSettingsStore((s) => s.updateAIConfig);
   const deleteAIConfig = useSettingsStore((s) => s.deleteAIConfig);
+  const replaceAllAIConfigs = useSettingsStore((s) => s.replaceAllAIConfigs);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [backendOnline, setBackendOnline] = useState(false);
   const [modelInfoMap, setModelInfoMap] = useState<Record<string, ModelInfo>>({});
@@ -55,56 +57,43 @@ export function useAIConfig() {
     healthCheck().then((online) => setBackendOnline(online));
   }, []);
 
-  // 兜底：若 localStorage 里有 config 但都没有 isActive（老用户场景），自动激活第一个
-  useEffect(() => {
-    if (aiConfigs.length === 0) return;
-    const hasActive = aiConfigs.some((c) => c.isActive);
-    if (!hasActive) {
-      const first = aiConfigs[0]!;
-      void updateAIConfig({ ...first, isActive: true });
-    }
-  }, [aiConfigs, updateAIConfig]);
-
+  // 打开设置页时，以后端配置为唯一事实来源，原子替换前端 store
   useEffect(() => {
     (async () => {
       try {
         const result = await getServerConfig();
         if (!result.providers) return;
-        const infoMap: Record<string, ModelInfo> = {};
+
+        // 保留本地已有的 apiKey（后端 GET 不返回 apiKey）
         const { aiConfigs: existing } = useSettingsStore.getState();
         const existingById = new Map(existing.map((c) => [c.id, c]));
-        const serverHasActive = result.providers.some((p) => p.isActive);
 
-        for (const p of result.providers) {
-          if (!p.id) continue;
-          if (p.maxTokens || p.contextLength) {
-            infoMap[p.id] = { maxTokens: p.maxTokens, contextLength: p.contextLength };
-          }
-          // 同步后端 provider 到本地 store：后端是事实来源，丢失的本地记录以空 apiKey 占位
-          const prev = existingById.get(p.id);
-          // 优先使用后端 isActive；若后端没有标记 active 而本地也没有，则第一个同步进来的标 active
-          const isActive = p.isActive || (prev?.isActive ?? false) || (!serverHasActive && !existing.some((c) => c.isActive));
-          const synced: AIProviderConfig = {
-            id: p.id,
-            name: p.name || prev?.name || `${p.provider} - ${p.modelId}`,
-            provider: p.provider as AIProviderConfig['provider'],
-            baseUrl: p.baseUrl,
-            apiKey: prev?.apiKey || '',
-            modelId: p.modelId,
-            isActive,
-          };
-          if (prev) {
-            await updateAIConfig(synced);
-          } else {
-            await addAIConfig(synced);
-          }
-        }
+        const infoMap: Record<string, ModelInfo> = {};
+        const syncedConfigs: AIProviderConfig[] = result.providers
+          .filter((p) => p.id)
+          .map((p) => {
+            if (p.maxTokens || p.contextLength) {
+              infoMap[p.id] = { maxTokens: p.maxTokens, contextLength: p.contextLength };
+            }
+            const prev = existingById.get(p.id);
+            return {
+              id: p.id,
+              name: p.name || prev?.name || `${p.provider} - ${p.modelId}`,
+              provider: p.provider as AIProviderConfig['provider'],
+              baseUrl: p.baseUrl,
+              apiKey: prev?.apiKey || '',
+              modelId: p.modelId,
+              isActive: p.isActive,  // 后端 activeProviderId 决定，保证唯一
+            };
+          });
+
+        replaceAllAIConfigs(syncedConfigs);
         setModelInfoMap(infoMap);
       } catch {
         // 静默失败：保持本地状态
       }
     })();
-  }, [addAIConfig, updateAIConfig]);
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps -- 仅挂载时同步一次
 
   const syncConfigToServer = useCallback(async (config: AIProviderConfig) => {
     try {
@@ -131,14 +120,15 @@ export function useAIConfig() {
     try {
       const values = await form.validateFields();
       if (editingId) {
-        const updatedConfig = { ...values, id: editingId } as AIProviderConfig;
+        const prev = useSettingsStore.getState().aiConfigs.find((c) => c.id === editingId);
+        const updatedConfig = { ...values, id: editingId, isActive: prev?.isActive ?? false } as AIProviderConfig;
         await updateAIConfig(updatedConfig);
         await syncConfigToServer(updatedConfig);
         message.success('AI 配置已更新');
       } else {
         // 如果是首个配置，保存时自动设为活跃
         const { aiConfigs: existing } = useSettingsStore.getState();
-        const shouldBeActive = existing.length === 0 ? true : !!(values as Partial<AIProviderConfig>).isActive;
+        const shouldBeActive = existing.length === 0;
         const newConfig: AIProviderConfig = {
           ...(values as Omit<AIProviderConfig, 'id' | 'isActive'>),
           id: uuidv4(),
@@ -161,6 +151,11 @@ export function useAIConfig() {
   };
 
   const handleDelete = async (id: string, form: FormInstance<AIProviderConfig>) => {
+    try {
+      await deleteServerConfig(id);
+    } catch (err) {
+      console.warn('[Settings] Failed to delete config from server:', err);
+    }
     await deleteAIConfig(id);
     setModelInfoMap((prev) => { const next = { ...prev }; delete next[id]; return next; });
     if (editingId === id) { setEditingId(null); form.resetFields(); }
@@ -170,11 +165,12 @@ export function useAIConfig() {
   const handleSetActive = async (config: AIProviderConfig) => {
     try {
       await setActiveServerConfig(config.id);
-      const { aiConfigs: configs } = useSettingsStore.getState();
-      for (const c of configs) {
-        if (c.id === config.id) await updateAIConfig({ ...c, isActive: true });
-        else if (c.isActive) await updateAIConfig({ ...c, isActive: false });
-      }
+      // 原子更新：只有一个 isActive = true
+      const configs = useSettingsStore.getState().aiConfigs.map((c) => ({
+        ...c,
+        isActive: c.id === config.id,
+      }));
+      replaceAllAIConfigs(configs);
       message.success(`已切换到「${config.name}」`);
     } catch {
       message.error('设置活跃配置失败');

@@ -208,24 +208,24 @@ router.post('/api/generate/stream', async (req, res) => {
       { role: 'system', content: PROMPTS.generate.system },
       { role: 'user', content: PROMPTS.generate.user(styleText, userPrompt) },
     ];
-    
+
     const stream = await callAIStream(config, messages, {
       maxTokens: config.maxTokens || 16000, temperature: 0.8,
     });
-    
+
     let fullContent = '', buffer = '';
     res.write(`data: ${JSON.stringify({ type: 'start', prompt: fullPrompt })}\n\n`);
-    
+
     const reader = stream.getReader();
     const decoder = new TextDecoder();
-    
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
       buffer = lines.pop() || '';
-      
+
       for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed.startsWith('data: ')) continue;
@@ -243,12 +243,12 @@ router.post('/api/generate/stream', async (req, res) => {
         } catch { /* 忽略解析错误 */ }
       }
     }
-    
+
     const { bookTitle, chapters } = parseNovelContent(fullContent);
     log('INFO', '=== AI Novel Generation (Stream) Completed ===', {
       bookTitle, chapterCount: chapters.length,
     });
-    
+
     res.write(`data: ${JSON.stringify({
       type: 'done',
       data: {
@@ -341,24 +341,24 @@ router.post('/api/generate/append/stream', async (req, res) => {
       { role: 'system', content: PROMPTS.append.system },
       { role: 'user', content: PROMPTS.append.user(bookTitle, style, currentChapterCount, summary, recentContent, nextIndex) },
     ];
-    
+
     const stream = await callAIStream(config, messages, {
       maxTokens: Math.min(config.maxTokens || 16000, 16000), temperature: 0.8,
     });
-    
+
     let fullContent = '', buffer = '';
     res.write(`data: ${JSON.stringify({ type: 'start', prompt: '' })}\n\n`);
-    
+
     const reader = stream.getReader();
     const decoder = new TextDecoder();
-    
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
       buffer = lines.pop() || '';
-      
+
       for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed.startsWith('data: ')) continue;
@@ -376,7 +376,7 @@ router.post('/api/generate/append/stream', async (req, res) => {
         } catch { /* 忽略 */ }
       }
     }
-    
+
     const { chapters } = parseNovelContent(fullContent);
     const normalizedChapters = ensureTwoAppendChapters(chapters, nextIndex);
     log('INFO', '=== AI Append Generation (Stream) Completed ===', {
@@ -384,7 +384,7 @@ router.post('/api/generate/append/stream', async (req, res) => {
       newChapterCount: normalizedChapters.length,
       chapterTitles: normalizedChapters.map(ch => ch.title),
     });
-    
+
     res.write(`data: ${JSON.stringify({
       type: 'done',
       data: {

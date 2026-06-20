@@ -47,6 +47,29 @@ export async function apiGet<T>(endpoint: string): Promise<T> {
   return data.data as T;
 }
 
+export async function apiDelete<T>(endpoint: string): Promise<T> {
+  logInfo(`DELETE ${endpoint}`);
+  const start = Date.now();
+
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error(`API 请求失败: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const duration = Date.now() - start;
+  logInfo(`DELETE ${endpoint} completed (${duration}ms)`, { code: data.code, message: data.message });
+
+  if (data.code !== 0) {
+    throw new Error(data.message || '未知错误');
+  }
+
+  return data.data as T;
+}
+
 // ============ SSE 流读取工具 ============
 export type { StreamCallbacks } from './aiTypes';
 export type { GenerateResponse } from './aiTypes';
@@ -110,9 +133,7 @@ export async function readSSE(
       }
     }
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new Error('用户已取消生成');
-    }
+    // AbortError 直接向上抛，由调用方决定如何处理
     throw error;
   } finally {
     reader.releaseLock();

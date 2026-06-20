@@ -1,10 +1,43 @@
 @echo off
+setlocal enabledelayedexpansion
 chcp 65001 >nul 2>&1
 title NovelBuilder - 启动服务
 
 echo ========================================
 echo   NovelBuilder 启动脚本
 echo ========================================
+echo.
+
+goto :main
+
+REM ================================
+REM 函数：关闭指定端口
+REM ================================
+:kill_port
+set PORT=%1
+set PID=
+
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr :!PORT! ^| findstr LISTENING') do (
+    set PID=%%a
+)
+
+if not "!PID!"=="" (
+    echo [端口占用] 端口 !PORT! 被 PID=!PID! 占用，正在结束进程...
+    pause >nul
+    taskkill /PID !PID! /F >nul 2>&1
+    echo [已释放] 端口 !PORT!
+) else (
+    echo [空闲] 端口 !PORT! 未被占用
+)
+exit /b
+
+:main
+REM ================================
+REM 关闭后端与前端端口
+REM ================================
+echo [0/4] 检查端口占用并释放...
+call :kill_port 5299
+call :kill_port 5298
 echo.
 
 REM 检查 Node.js 是否安装

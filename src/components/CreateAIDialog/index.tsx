@@ -25,9 +25,9 @@ export default function CreateAIDialog({ open, onClose }: CreateAIDialogProps) {
   const { modal } = App.useApp();
   const navigate = useNavigate();
   const activeAIConfig = useSettingsStore((s) => s.activeAIConfig);
-  const isAIConfigured = Boolean(activeAIConfig && activeAIConfig.apiKey);
+  const isAIConfigured = Boolean(activeAIConfig);
 
-  const { generating, progress, elapsedTime, handleGenerate } = useGenerateNovel();
+  const { generating, progress, elapsedTime, cancelGenerate, handleGenerate } = useGenerateNovel();
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
@@ -45,6 +45,12 @@ export default function CreateAIDialog({ open, onClose }: CreateAIDialogProps) {
   };
 
   const handleGenerateClick = async () => {
+    // 生成中点击 = 停止
+    if (generating) {
+      cancelGenerate();
+      return false;
+    }
+
     // 前置校验：未配置 AI 时弹窗询问用户去设置，并阻止 onOk 关闭
     if (!isAIConfigured) {
       modal.confirm({
@@ -68,7 +74,6 @@ export default function CreateAIDialog({ open, onClose }: CreateAIDialogProps) {
         setCustomPrompt('');
       },
     );
-    return true;
   };
 
   return (
@@ -81,18 +86,20 @@ export default function CreateAIDialog({ open, onClose }: CreateAIDialogProps) {
       }
       open={open}
       onCancel={() => {
-        if (!generating) {
-          setSelectedTags([]);
-          setCustomPrompt('');
-          onClose();
+        if (generating) {
+          cancelGenerate();
         }
+        setSelectedTags([]);
+        setCustomPrompt('');
+        onClose();
       }}
       onOk={handleGenerateClick}
-      okText={generating ? '生成中...' : '开始生成'}
+      okText={generating ? '停止生成' : '开始生成'}
+      okButtonProps={generating ? { danger: true, icon: undefined } : {}}
       cancelText="取消"
-      confirmLoading={generating}
-      closable={!generating}
-      maskClosable={!generating}
+      confirmLoading={false}
+      closable
+      maskClosable={false}
       width={560}
     >
       <Spin spinning={generating} tip={null}>

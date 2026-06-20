@@ -2,7 +2,7 @@
  * AI 小说生成 Hook
  */
 
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { App } from 'antd';
 import { useBookStore } from '@/stores/bookStore';
@@ -22,6 +22,7 @@ interface UseGenerateNovelReturn {
   generating: boolean;
   progress: string;
   elapsedTime: number;
+  cancelGenerate: () => void;
   handleGenerate: (
     selectedTags: string[],
     customPrompt: string,
@@ -35,6 +36,14 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState('');
   const [elapsedTime, setElapsedTime] = useState(0);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const cancelGenerate = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
+
+  // 组件卸载时自动中止
+  useEffect(() => () => { abortRef.current?.abort(); }, []);
 
   const addBook = useBookStore((s) => s.addBook);
   const openBook = useBookStore((s) => s.openBook);
@@ -63,6 +72,9 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
     setProgress('正在连接 AI 服务...');
     setElapsedTime(0);
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     // 计时器
     const startTime = Date.now();
     const timer = setInterval(() => {
@@ -84,6 +96,7 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
           onDone: (data) => { streamResult = data; },
           onError: (msg) => { throw new Error(msg); },
         },
+        { signal: controller.signal },
       );
 
       if (!streamResult) throw new Error('生成失败：未收到结果');
@@ -180,7 +193,14 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
       resetForm();
       onClose();
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : '生成失败，请重试';
+      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      const rawMsg = err instanceof Error ? err.message : '生成失败，请重试';
+      const errorMsg = isAbort ? '用户已取消生成' : rawMsg;
+      if (isAbort) {
+        message.info('已取消生成');
+      } else {
+        message.error(errorMsg);
+      }
       await addGenerationHistoryEntry({
         bookId: `failed:${Date.now()}`,
         type: 'initial',
@@ -190,13 +210,13 @@ export function useGenerateNovel(): UseGenerateNovelReturn {
         provider: activeAIConfig.provider,
         error: truncateError(errorMsg),
       });
-      message.error(errorMsg);
     } finally {
       clearInterval(timer);
+      abortRef.current = null;
       setGenerating(false);
       setProgress('');
     }
   };
 
-  return { generating, progress, elapsedTime, handleGenerate };
+  return { generating, progress, elapsedTime, cancelGenerate, handleGenerate };
 }
